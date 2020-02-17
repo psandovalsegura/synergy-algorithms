@@ -11,6 +11,12 @@ class NormalDistribution:
 		variance = self.variance + other.variance
 		return NormalDistribution(mean, variance)
 
+	def __rmul__(self, constant):
+		assert type(constant) == float or type(constant) == int
+		mean = constant * self.mean
+		variance = np.power(constant, 2) * self.variance
+		return NormalDistribution(mean, variance)
+
 	def __eq__(self, other):
 		return (self.mean == other.mean) and (self.variance == other.variance)
 

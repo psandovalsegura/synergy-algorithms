@@ -2,7 +2,7 @@ from src.synergy_graph import *
 from src.normal_distribution import *
 
 def test_get_distributions():
-	# Create path graph that looks like:
+	# Create a path graph 
 	G = nx.generators.classic.path_graph(3)
 	assert list(G.nodes()) == [0, 1, 2]
 
