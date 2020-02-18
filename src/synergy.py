@@ -1,5 +1,24 @@
+import itertools
+import functools
 import numpy as np
 import networkx as nx
+from scipy.special import comb
+
+def synergy(S, A, weight_fn):
+	"""
+	S is a SynergyGraph
+	A is a list of agents
+	"""
+	total_pairs = comb(len(A), 2, exact=True)
+
+	pair_synergies = []
+	for pair in itertools.combinations(A, r=2):
+		pair_synergies.append(pairwise_synergy(S, weight_fn, *pair))
+
+	synergy = functools.reduce(lambda a_distributions, b_distributions : elementwise_add(a_distributions, b_distributions), pair_synergies)
+	scale = (1 / total_pairs)
+	return list(map(lambda d: scale * d, synergy))
+
 
 def pairwise_synergy(S, weight_fn, a, b):
 	"""
