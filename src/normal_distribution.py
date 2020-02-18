@@ -24,4 +24,10 @@ class NormalDistribution:
 		return "NormalDistribution({0}, {1})".format(self.mean, self.variance)
 
 	def evaluate(self, p):
+		"""
+		According to Section 3.3, this evaluation balances
+		the mean and variance of a normal distribution
+		by using a risk factor p in (0,1), where distributions
+		with higher variance obtain higher values if p > 0.5
+		"""
 		return self.mean + np.sqrt(self.variance) * norm.ppf(p)

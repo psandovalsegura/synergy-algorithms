@@ -78,6 +78,13 @@ def test_synergy_with_figure_3():
 	assert len(team_C_synergy) == 1
 	assert team_C_synergy[0].mean == 20
 
-
-
+	# Check final task values
+	p = 0.50
+	team_A_value = team_A_synergy[0].evaluate(p)
+	team_B_value = team_B_synergy[0].evaluate(p)
+	team_C_value = team_C_synergy[0].evaluate(p)
+	print(team_A_value, team_B_value, team_C_value)
+	assert team_A_value > team_B_value
+	assert team_C_value > team_B_value
+	assert team_C_value > team_A_value
 

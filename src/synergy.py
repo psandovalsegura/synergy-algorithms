@@ -19,7 +19,6 @@ def synergy(S, A, weight_fn):
 	scale = (1 / total_pairs)
 	return list(map(lambda d: scale * d, synergy))
 
-
 def pairwise_synergy(S, weight_fn, a, b):
 	"""
 	Pairwise synergy between two agents a and b
