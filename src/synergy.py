@@ -34,6 +34,27 @@ def get_approx_optimal_team_brute(S, mathcal_A, p, k_max, weight_fn):
 			best_team = team
 	return best_team
 
+class RandomTeamNeighborStep(object):
+	def __init__(self, S, mathcal_A, A, weight_fn):
+		"""
+		S is a SynergyGraph
+		mathcal_A is the set of all agents
+		A is a list of agents
+		"""
+		self.S = S
+		self.mathcal_A = mathcal_A
+		self.A = A
+		self.weight_fn = weight_fn
+
+	def __call__(self, x):
+		"""
+		x is list of distributions
+		"""
+		new_A = random_team_neighbor(self.mathcal_A, self.A)
+		distributions = synergy(self.S, new_A, self.weight_fn)
+		self.A = new_A
+		return distributions
+
 def get_approx_optimal_team(S, mathcal_A, n, p, k_max, weight_fn):
 	"""
 	S is a SynergyGraph
@@ -47,16 +68,13 @@ def get_approx_optimal_team(S, mathcal_A, n, p, k_max, weight_fn):
 
 	f = lambda x: value_fn_sum(x, p)
 	x0 = distributions
-	# basinhopping(f, x0, )
-	pass
+	stepper = RandomTeamNeighborStep(S, mathcal_A, A, weight_fn)
+	
+	# Run a variant of simulated annealing
+	ret = basinhopping(f, x0, take_step=stepper)
+	print(f"Success={ret.success} Message={ret.message}")
+	print(f"x={ret.x} y={ret.fun}")
 
-	# for k in range(k_max):
-		# TODO:
-		# RandomTeamNeighbor()
-		# Compute synergy of new team
-		# Get value of distributions
-		# Simulated annealing
-		# pass
 
 def synergy(S, A, weight_fn):
 	"""
@@ -111,7 +129,6 @@ def random_team_neighbor(mathcal_A, A):
 	random_index = random.choice(range(len(A)))
 	A[random_index] = new_agent
 	return A
-
 
 def weight_fn_reciprocal(d):
 	return 1 / d

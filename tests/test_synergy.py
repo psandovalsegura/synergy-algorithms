@@ -128,3 +128,29 @@ def test_random_team_neighbor_runtime_err():
 		B = random_team_neighbor(mathcal_A, A)
 	assert "no agents available" in str(excinfo.value)
 
+def test_random_neighbor_step_1():
+	G = nx.generators.classic.path_graph(3)
+	mathcal_A = [0,1,2]
+	A = [1,2]
+
+	# Create dict of normal distributions for M=2 tasks
+	N = dict()
+	N[0] = [NormalDistribution(0,1), NormalDistribution(1,2)]
+	N[1] = [NormalDistribution(2,3), NormalDistribution(3,4)]
+	N[2] = [NormalDistribution(4,5), NormalDistribution(5,6)]
+
+	# Create and query graph
+	S = SynergyGraph(G, N)
+
+	distributions = [NormalDistribution(2,3), NormalDistribution(5,6)]
+	stepper = RandomTeamNeighborStep(S, mathcal_A, A, weight_fn_reciprocal)
+	assert stepper.mathcal_A == mathcal_A
+	assert stepper.A == A
+	assert stepper.S != None
+
+	B = stepper(distributions)
+	assert stepper.mathcal_A == mathcal_A
+	assert (0 in stepper.A)
+	assert (len(stepper.A) == 2)
+	assert len(B) == 2
+
