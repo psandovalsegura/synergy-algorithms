@@ -11,6 +11,18 @@ def test_weight_fn_exponential():
 	assert weight_fn_exponential(1, 1) == 2
 	assert weight_fn_exponential(5, 1) == 2 ** 5
 
+def test_value_fn_sum():
+	p = 0.5
+	a_distributions = [NormalDistribution(1,1), NormalDistribution(2,2)]
+	a_0_eval = NormalDistribution(1,1).evaluate(p)
+	a_1_eval = NormalDistribution(2,2).evaluate(p)
+	assert value_fn_sum(a_distributions, p) == (a_0_eval + a_1_eval)
+
+	b_distributions = [NormalDistribution(4,5), NormalDistribution(6,7)]
+	b_0_eval = NormalDistribution(4,5).evaluate(p)
+	b_1_eval = NormalDistribution(6,7).evaluate(p)
+	assert value_fn_sum(b_distributions, p) == (b_0_eval + b_1_eval)
+
 def test_elementwise_add():
 	a_distributions = [NormalDistribution(1,1)]
 	b_distributions = [NormalDistribution(4,5)]
