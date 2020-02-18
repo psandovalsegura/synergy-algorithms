@@ -1,3 +1,4 @@
+import pytest
 from src.synergy import *
 from src.synergy_graph import *
 from src.normal_distribution import *
@@ -99,4 +100,31 @@ def test_synergy_with_figure_3():
 	assert team_A_value > team_B_value
 	assert team_C_value > team_B_value
 	assert team_C_value > team_A_value
+
+def test_random_team_neighbor_full_team():
+	mathcal_A = [1,2,3,4]
+	A = [1,2,3,4]
+	B = random_team_neighbor(mathcal_A, A)
+	assert A == B
+
+def test_random_team_neighbor_1():
+	mathcal_A = [1,2,3,4]
+	A = [1,2,3]
+	B = random_team_neighbor(mathcal_A, A)
+	assert len(B) == 3
+	assert (4 in B)
+
+def test_random_team_neighbor_2():
+	mathcal_A = [4,3,2,1]
+	A = [1,2]
+	B = random_team_neighbor(mathcal_A, A)
+	assert len(B) == 2
+	assert (1 not in B) or (2 not in B)
+
+def test_random_team_neighbor_runtime_err():
+	mathcal_A = []
+	A = [1,2,3,4]
+	with pytest.raises(RuntimeError) as excinfo:
+		B = random_team_neighbor(mathcal_A, A)
+	assert "no agents available" in str(excinfo.value)
 

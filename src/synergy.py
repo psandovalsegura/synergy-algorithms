@@ -4,6 +4,7 @@ import random
 import numpy as np
 import networkx as nx
 from scipy.special import comb
+from scipy.optimize import basinhopping
 
 def create_synergy_graph(O, mathcal_A):
 	"""
@@ -17,7 +18,7 @@ def create_synergy_graph(O, mathcal_A):
 
 	pass
 
-def get_approx_optimal_team_brute(S, mathcal_A, p):
+def get_approx_optimal_team_brute(S, mathcal_A, p, k_max, weight_fn):
 	"""
 	S is a SynergyGraph
 	mathcal_A is the set of all agents
@@ -26,14 +27,14 @@ def get_approx_optimal_team_brute(S, mathcal_A, p):
 	num_agents = len(mathcal_A)
 	best_value = -1
 	best_team = None
-	for n in range(num_agents):
-		team, value = get_approx_optimal_team(S, n, p)
+	for n in range(1, num_agents + 1):
+		team, value = get_approx_optimal_team(S, mathcal_A, n, p, k_max, weight_fn)
 		if value > best_value:
 			best_value = value
 			best_team = team
 	return best_team
 
-def get_approx_optimal_team(S, mathcal_A, n, p, weight_fn):
+def get_approx_optimal_team(S, mathcal_A, n, p, k_max, weight_fn):
 	"""
 	S is a SynergyGraph
 	mathcal_A is the set of all agents
@@ -43,7 +44,19 @@ def get_approx_optimal_team(S, mathcal_A, n, p, weight_fn):
 	A = random.sample(mathcal_A, n)
 	distributions = synergy(S, A, weight_fn)
 	value = value_fn_sum(distributions, p)
+
+	f = lambda x: value_fn_sum(x, p)
+	x0 = distributions
+	# basinhopping(f, x0, )
 	pass
+
+	# for k in range(k_max):
+		# TODO:
+		# RandomTeamNeighbor()
+		# Compute synergy of new team
+		# Get value of distributions
+		# Simulated annealing
+		# pass
 
 def synergy(S, A, weight_fn):
 	"""
@@ -72,6 +85,33 @@ def pairwise_synergy(S, weight_fn, a, b):
 	sum_distribution = elementwise_add(a_distribution, b_distribution)
 	w = weight_fn(distance)
 	return list(map(lambda d: w * d, sum_distribution))
+
+def random_team_neighbor(mathcal_A, A):
+	"""
+	mathcal_A is the set of all agents
+	A is a list of agents
+
+	note: this function does not support 
+	multiple agents of the same type
+	"""
+	if len(mathcal_A) == 0:
+		raise RuntimeError('There are no agents available, mathcal_A is empty')
+
+	mathcal_A_set = set(mathcal_A)
+	A_set = set(A)
+	difference = mathcal_A_set - A_set
+	print(difference)
+
+	# if A contains all the available agents
+	# then nothing can be done
+	if len(difference) == 0:
+		return A
+
+	new_agent = random.choice(list(difference))
+	random_index = random.choice(range(len(A)))
+	A[random_index] = new_agent
+	return A
+
 
 def weight_fn_reciprocal(d):
 	return 1 / d
