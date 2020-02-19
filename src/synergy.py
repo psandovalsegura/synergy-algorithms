@@ -35,27 +35,6 @@ def get_approx_optimal_team_brute(S, mathcal_A, p, k_max, weight_fn):
 			best_team = team
 	return best_team
 
-class RandomTeamNeighborStep(object):
-	def __init__(self, S, mathcal_A, A, weight_fn):
-		"""
-		S is a SynergyGraph
-		mathcal_A is the set of all agents
-		A is a list of agents
-		"""
-		self.S = S
-		self.mathcal_A = mathcal_A
-		self.A = A
-		self.weight_fn = weight_fn
-
-	def __call__(self, x):
-		"""
-		x is list of distributions
-		"""
-		new_A = random_team_neighbor(self.mathcal_A, self.A)
-		distributions = synergy(self.S, new_A, self.weight_fn)
-		self.A = new_A
-		return distributions
-
 def get_approx_optimal_team(S, mathcal_A, n, p, weight_fn, k_max):
 	"""
 	S is a SynergyGraph
