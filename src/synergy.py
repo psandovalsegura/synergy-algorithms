@@ -3,6 +3,7 @@ import functools
 import random
 import numpy as np
 import networkx as nx
+from src.annealing import annealing
 from scipy.special import comb
 from scipy.optimize import basinhopping
 
@@ -55,26 +56,19 @@ class RandomTeamNeighborStep(object):
 		self.A = new_A
 		return distributions
 
-def get_approx_optimal_team(S, mathcal_A, n, p, k_max, weight_fn):
+def get_approx_optimal_team(S, mathcal_A, n, p, weight_fn, k_max):
 	"""
 	S is a SynergyGraph
 	mathcal_A is the set of all agents
 	n is the optimal size of the team, if unknown use brute force version
 	p is the risk factor
 	"""
-	A = random.sample(mathcal_A, n)
-	distributions = synergy(S, A, weight_fn)
-	value = value_fn_sum(distributions, p)
+	initial_team = random.sample(mathcal_A, n)
+	value_function = lambda x: value_fn_sum(synergy(S, x, weight_fn), p)
+	random_neighbor = lambda a: random_team_neighbor(mathcal_A, a)
 
-	f = lambda x: value_fn_sum(x, p)
-	x0 = distributions
-	stepper = RandomTeamNeighborStep(S, mathcal_A, A, weight_fn)
-	
-	# Run a variant of simulated annealing
-	ret = basinhopping(f, x0, take_step=stepper)
-	print(f"Success={ret.success} Message={ret.message}")
-	print(f"x={ret.x} y={ret.fun}")
-
+	final_team, final_value, teams, values = annealing(initial_team, value_function, random_neighbor, debug=True, maxsteps=k_max)
+	return final_team, final_value, teams, values
 
 def synergy(S, A, weight_fn):
 	"""
@@ -118,7 +112,6 @@ def random_team_neighbor(mathcal_A, A):
 	mathcal_A_set = set(mathcal_A)
 	A_set = set(A)
 	difference = mathcal_A_set - A_set
-	print(difference)
 
 	# if A contains all the available agents
 	# then nothing can be done
@@ -127,8 +120,9 @@ def random_team_neighbor(mathcal_A, A):
 
 	new_agent = random.choice(list(difference))
 	random_index = random.choice(range(len(A)))
-	A[random_index] = new_agent
-	return A
+	B = A.copy()
+	B[random_index] = new_agent
+	return B
 
 def weight_fn_reciprocal(d):
 	return 1 / d

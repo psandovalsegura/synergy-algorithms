@@ -1,7 +1,31 @@
 import pytest
+import itertools
 from src.synergy import *
 from src.synergy_graph import *
 from src.normal_distribution import *
+
+def get_figure_3_synergy_graph():
+	# Build graph in figure 3 of paper by Liemhetcharat and Veloso
+	G = nx.Graph()
+	G.add_edge(1,2)
+	G.add_edge(2,4)
+	G.add_edge(4,1)
+	G.add_edge(4,5)
+	G.add_edge(5,6)
+	G.add_edge(6,3)
+
+	# Create dict of normal distributions for M=1 tasks
+	N = dict()
+	N[1] = [NormalDistribution(5,1)]
+	N[2] = [NormalDistribution(5,2)]
+	N[3] = [NormalDistribution(23,4)]
+	N[4] = [NormalDistribution(20,7)]
+	N[5] = [NormalDistribution(10,3)]
+	N[6] = [NormalDistribution(8,1)]
+
+	# Create graph
+	S = SynergyGraph(G, N)
+	return S
 
 def test_weight_fn_reciprocal():
 	assert weight_fn_reciprocal(1) == 1
@@ -23,6 +47,22 @@ def test_value_fn_sum():
 	b_0_eval = NormalDistribution(4,5).evaluate(p)
 	b_1_eval = NormalDistribution(6,7).evaluate(p)
 	assert value_fn_sum(b_distributions, p) == (b_0_eval + b_1_eval)
+
+def test_value_fn_with_synergy_repeat():
+	S = get_figure_3_synergy_graph()
+	p = 0.5
+	f = lambda team: value_fn_sum(synergy(S, team, weight_fn_reciprocal), p)
+
+	A1 = [5,2,6]
+	value_A1 = f(A1)
+	A2 = [2,5,6]
+	value_A2 = f(A2)
+	A3 = [6,2,5]
+	value_A3 = f(A3)
+
+	assert value_A1 == value_A2
+	assert value_A2 == value_A3
+	assert value_A1 == value_A3
 
 def test_elementwise_add():
 	a_distributions = [NormalDistribution(1,1)]
@@ -54,26 +94,7 @@ def test_pairwise_synergy():
 	assert pair_synergy == [0.5 * NormalDistribution(4,6), 0.5 * NormalDistribution(6,8)]
 
 def test_synergy_with_figure_3():
-	# Build graph in figure 3 of paper by Liemhetcharat and Veloso
-	G = nx.Graph()
-	G.add_edge(1,2)
-	G.add_edge(2,4)
-	G.add_edge(4,1)
-	G.add_edge(4,5)
-	G.add_edge(5,6)
-	G.add_edge(6,3)
-
-	# Create dict of normal distributions for M=1 tasks
-	N = dict()
-	N[1] = [NormalDistribution(5,1)]
-	N[2] = [NormalDistribution(5,2)]
-	N[3] = [NormalDistribution(23,4)]
-	N[4] = [NormalDistribution(20,7)]
-	N[5] = [NormalDistribution(10,3)]
-	N[6] = [NormalDistribution(8,1)]
-
-	# Create graph
-	S = SynergyGraph(G, N)
+	S = get_figure_3_synergy_graph()
 
 	# Get synergy of different teams described at the end of Section 3.2
 	team_A = [1,2]
@@ -121,6 +142,14 @@ def test_random_team_neighbor_2():
 	assert len(B) == 2
 	assert (1 not in B) or (2 not in B)
 
+def test_random_team_neighbor_3():
+	mathcal_A = [4,3,2,1]
+	A = [1,2]
+	original_A = A.copy()
+	B = random_team_neighbor(mathcal_A, A)
+	assert len(A) == 2
+	assert A == original_A
+
 def test_random_team_neighbor_runtime_err():
 	mathcal_A = []
 	A = [1,2,3,4]
@@ -128,7 +157,7 @@ def test_random_team_neighbor_runtime_err():
 		B = random_team_neighbor(mathcal_A, A)
 	assert "no agents available" in str(excinfo.value)
 
-def test_random_neighbor_step_1():
+def test_random_neighbor_step():
 	G = nx.generators.classic.path_graph(3)
 	mathcal_A = [0,1,2]
 	A = [1,2]
@@ -153,4 +182,26 @@ def test_random_neighbor_step_1():
 	assert (0 in stepper.A)
 	assert (len(stepper.A) == 2)
 	assert len(B) == 2
+
+def test_get_approx_optimal_team_figure_3():
+	S = get_figure_3_synergy_graph()
+	mathcal_A = [1,2,3,4,5,6]
+	n = 3
+	p = 0.50
+	k_max = 100
+	approx_A, approx_value, approx_teams, approx_values = get_approx_optimal_team(S, mathcal_A, n, p, weight_fn_reciprocal, k_max)
+	assert len(approx_A) == n
+
+	# Compute actual optimal team to verify the solution found by annealing
+	best_team = None
+	best_value = -1
+	for team in itertools.combinations(mathcal_A, r=n):
+		value = value_fn_sum(synergy(S, team, weight_fn_reciprocal), p)
+		if value > best_value:
+			best_value = value
+			best_team = team
+
+	assert set(approx_A) == set(best_team)
+	assert approx_value == best_value
+	assert len(approx_values) <= k_max
 
