@@ -28,14 +28,14 @@ def get_approx_optimal_team_brute(S, mathcal_A, p, k_max, weight_fn):
 	num_agents = len(mathcal_A)
 	best_value = -1
 	best_team = None
-	for n in range(1, num_agents + 1):
-		team, value = get_approx_optimal_team(S, mathcal_A, n, p, k_max, weight_fn)
+	for n in range(2, num_agents + 1):
+		team, value, _, _ = get_approx_optimal_team(S, mathcal_A, n, p, k_max, weight_fn)
 		if value > best_value:
 			best_value = value
 			best_team = team
-	return best_team
+	return best_team, best_value
 
-def get_approx_optimal_team(S, mathcal_A, n, p, weight_fn, k_max):
+def get_approx_optimal_team(S, mathcal_A, n, p, k_max, weight_fn):
 	"""
 	S is a SynergyGraph
 	mathcal_A is the set of all agents
@@ -53,6 +53,7 @@ def synergy(S, A, weight_fn):
 	"""
 	S is a SynergyGraph
 	A is a list of agents
+	Note: A must be of size >= 2
 	"""
 	total_pairs = comb(len(A), 2, exact=True)
 

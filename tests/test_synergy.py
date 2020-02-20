@@ -163,19 +163,40 @@ def test_get_approx_optimal_team_figure_3():
 	n = 3
 	p = 0.50
 	k_max = 100
-	approx_A, approx_value, approx_teams, approx_values = get_approx_optimal_team(S, mathcal_A, n, p, weight_fn_reciprocal, k_max)
-	assert len(approx_A) == n
+	approx_A, approx_value, approx_teams, approx_values = get_approx_optimal_team(S, mathcal_A, n, p, k_max, weight_fn_reciprocal)
 
-	# Compute actual optimal team to verify the solution found by annealing
-	best_team = None
-	best_value = -1
-	for team in itertools.combinations(mathcal_A, r=n):
-		value = value_fn_sum(synergy(S, team, weight_fn_reciprocal), p)
-		if value > best_value:
-			best_value = value
-			best_team = team
+	# Optimal teams of size 3 (to test the solution found by annealing)
+	# [3,5,6] with value 21.8333
+	# [1,4,5] with value 20.8333
+	# [2,4,5] with value 20.8333
+	# [4,5,6] with value 20.6666
+	# [3,4,5] with value 20.2777
 
-	assert set(approx_A) == set(best_team)
-	assert approx_value == best_value
+	found_team_1 = set(approx_A) == set([3,5,6]) and np.round(approx_value, 3) == 21.833
+	found_team_2 = set(approx_A) == set([1,4,5]) and np.round(approx_value, 3) == 20.833
+	found_team_3 = set(approx_A) == set([2,4,5]) and np.round(approx_value, 3) == 20.833
+	
+	assert found_team_1 or found_team_2 or found_team_3
+	assert len(approx_teams) == len(approx_values)
 	assert len(approx_values) <= k_max
+
+def test_get_approx_optimal_team_brute_figure_3():
+	S = get_figure_3_synergy_graph()
+	mathcal_A = [1,2,3,4,5,6]
+	p = 0.50
+	k_max = 100
+	brute_best_team, brute_best_value = get_approx_optimal_team_brute(S, mathcal_A, p, k_max, weight_fn_reciprocal)
+
+	# Optimal teams (to test the solution found by annealing)
+	# [3,6] with value 31.0
+	# [4,5] with value 30.0
+	# [1,4] with value 25.0
+	# [2,4] with value 25.0
+	# [3,5,6] with value 21.8333
+
+	found_team_1 = set(brute_best_team) == set([3,6]) and np.round(brute_best_value, 3) == 31.0
+	found_team_2 = set(brute_best_team) == set([4,5]) and np.round(brute_best_value, 3) == 30.0
+	found_team_3 = set(brute_best_team) == set([1,4]) and np.round(brute_best_value, 3) == 25.0
+
+	assert found_team_1 or found_team_2 or found_team_3
 
