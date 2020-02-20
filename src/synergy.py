@@ -16,8 +16,42 @@ def create_synergy_graph(O, mathcal_A):
 	nearest_neighbors = 3
 	rewire_prob = 0.30
 	G = nx.generators.random_graphs.connected_watts_strogatz_graph(num_agents, nearest_neighbors, rewire_prob)
+	N = estimate_capability(O, G)
+
+	# Create initial synergy graph
+	S_initial = SynergyGraph(G, N)
+	S_learned = S_initial
 
 	pass
+
+def random_graph_neighbor(G):
+	"""
+	G is a networkx graph
+
+	either adds a new random edge or removes
+	an existing edge, subject to the constraint 
+	that G remains connected
+	note: modifies the input parameter G
+	"""
+	edges = [e for e in G.edges]
+	nodes = [n for n in G]
+	while True:
+		if random.random() < 0.5:
+			removal_edge = random.choice(edges)
+			G.remove_edge(*removal_edge)
+		else:
+			potential_new_edges = set(itertools.combinations(nodes, r=2)) - set(edges)
+			new_edge = random.choice(list(potential_new_edges))
+			G.add_edge(*new_edge)
+
+		# if the graph becomes disconnected we
+		# should add back the edge which was removed
+		if nx.is_connected(G):
+			break
+		else:
+			G.add_edge(*removal_edge)
+
+	return G
 
 def get_approx_optimal_team_brute(S, mathcal_A, p, k_max, weight_fn):
 	"""

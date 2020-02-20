@@ -200,3 +200,40 @@ def test_get_approx_optimal_team_brute_figure_3():
 
 	assert found_team_1 or found_team_2 or found_team_3
 
+def test_random_graph_neighbor_1():
+	G = nx.generators.classic.path_graph(6)
+	initial_nodes = [n for n in G]
+	initial_edges = [e for e in G.edges]
+
+	random_graph_neighbor(G)
+	new_nodes = [n for n in G]
+	new_edges = [e for e in G.edges]
+
+	assert len(new_nodes) == len(initial_nodes)
+	assert (len(new_edges) - 1) == len(initial_edges) or (len(new_edges) + 1) == len(initial_edges)
+	assert new_edges != initial_edges
+	assert new_nodes == initial_nodes
+
+def test_random_graph_neighbor_2():
+	G = nx.Graph()
+	G.add_edge(1,2)
+	G.add_edge(2,4)
+	G.add_edge(4,1)
+	G.add_edge(4,5)
+	G.add_edge(5,6)
+	G.add_edge(6,3)
+
+	initial_nodes = [n for n in G]
+	initial_edges = [e for e in G.edges]
+
+	H = random_graph_neighbor(G)
+	new_nodes = [n for n in H]
+	new_edges = [e for e in H.edges]
+
+	assert len(new_nodes) == len(initial_nodes)
+	assert (len(new_edges) - 1) == len(initial_edges) or (len(new_edges) + 1) == len(initial_edges)
+	assert new_edges != initial_edges
+	assert new_nodes == initial_nodes
+
+
+
