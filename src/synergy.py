@@ -26,7 +26,10 @@ def create_synergy_graph(O, mathcal_A, weight_fn, k_max):
 	initial_sgraph = SynergyGraph(G, N)
 
 	value_function = lambda x: log_likelihood(O, x, weight_fn)
-	random_neighbor = lambda g: random_graph_neighbor(g)
+	def random_neighbor(s):
+		G_prime = random_graph_neighbor(s.graph)
+		N_prime = estimate_capability(O, G_prime, weight_fn)
+		return SynergyGraph(G_prime, N_prime)
 
 	final_sgraph, final_value, sgraphs, values = annealing(initial_sgraph, value_function, random_neighbor, debug=True, maxsteps=k_max)
 	return final_sgraph, final_value, sgraphs, values
@@ -38,14 +41,13 @@ def log_likelihood(O, S, weight_fn):
 	"""
 	likelihood = 0
 	for observation_group in O.observation_groups:
-		print(f"Params to synergy: ({S}, {observation_group.A}, {weight_fn})")
-
 		synergy_distributions = synergy(S, observation_group.A, weight_fn)
-		for i, observation in enumerate(observation_group.observations):
-			# iterate through an observation of each of the M subtasks 
-			# and evaluate the observation on the corresponding distribution
-			distribution = synergy_distributions[i]
-			likelihood += distribution.logpdf(observation)
+		for observation in observation_group.observations:
+			for m, value in enumerate(observation):
+				# iterate through an observation of each of the M subtasks 
+				# and evaluate the observation on the corresponding distribution
+				distribution = synergy_distributions[m]
+				likelihood += distribution.logpdf(value).item()
 	return likelihood
 
 def random_graph_neighbor(G):
@@ -61,10 +63,16 @@ def random_graph_neighbor(G):
 	nodes = [n for n in G]
 	while True:
 		if random.random() < 0.5:
+			# if there are no edges to remove, do nothing
+			if len(edges) == 0:
+				break
 			removal_edge = random.choice(edges)
 			G.remove_edge(*removal_edge)
 		else:
 			potential_new_edges = set(itertools.combinations(nodes, r=2)) - set(edges)
+			# if there are no new edges to add, do nothing
+			if len(potential_new_edges) == 0:
+				break
 			new_edge = random.choice(list(potential_new_edges))
 			G.add_edge(*new_edge)
 

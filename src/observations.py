@@ -17,6 +17,9 @@ def estimate_capability(O, G, weight_fn):
 	b_variance = np.zeros((num_teams, 1))
 
 	N = dict()
+	for j, a in enumerate(G.nodes):
+		N[a] = [None] * O.M
+
 	for m in range(O.M):
 		for i, observation_group in enumerate(O.observation_groups):
 			for j, a_j in enumerate(observation_group.A):
@@ -29,7 +32,7 @@ def estimate_capability(O, G, weight_fn):
 		means = np.linalg.lstsq(M_mean, b_mean, rcond=None)[0]
 		variances = np.linalg.lstsq(M_variance, b_variance, rcond=None)[0]
 		for j, a in enumerate(G.nodes):
-			N[a] = NormalDistribution(means[j], variances[j])
+			N[a][m] = NormalDistribution(means[j], variances[j])
 
 	return N
 
