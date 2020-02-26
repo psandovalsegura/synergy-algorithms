@@ -27,5 +27,14 @@ class ObservationGroup:
 		self.observations += observations
 
 class ObservationSet:
-	def __init__(self, observation_groups):
+	def __init__(self, M, observation_groups):
 		self.observation_groups = observation_groups
+		self.M = M
+
+		for observation_group in observation_groups:
+			if observation_group.M != M:
+				raise ValueError('Unable to create ObservationSet because one group does not have M subtasks')
+
+	def get_num_groups(self):
+		return len(self.observation_groups)
+		

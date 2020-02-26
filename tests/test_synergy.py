@@ -3,6 +3,7 @@ import itertools
 from src.synergy import *
 from src.synergy_graph import *
 from src.normal_distribution import *
+from src.observation_set import *
 
 def get_figure_3_synergy_graph():
 	# Build graph in figure 3 of paper by Liemhetcharat and Veloso
@@ -235,5 +236,19 @@ def test_random_graph_neighbor_2():
 	assert new_edges != initial_edges
 	assert new_nodes == initial_nodes
 
+# def test_create_synergy_graph():
+# 	M = 1
+# 	mathcal_A = [0,1,2,3]
+# 	k_max = 100
 
+# 	A = [0,1,2]
+# 	o1 = [[3], [4], [5]]
+# 	observation_group = ObservationGroup(A, M)
+# 	observation_group.add_observations(o1)
 
+# 	observation_set = ObservationSet(M, [observation_group])
+
+# 	final_sgraph, final_value, sgraphs, values = create_synergy_graph(observation_set, mathcal_A, weight_fn_reciprocal, k_max)
+# 	print(f"SynergyGraphs: {sgraphs}")
+# 	print(f"Values: {values}")
+# 	print(f"Final SynergyGraph: {final_sgraph} Value: {final_value}")

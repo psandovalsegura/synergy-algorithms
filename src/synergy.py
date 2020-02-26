@@ -3,29 +3,50 @@ import functools
 import random
 import numpy as np
 import networkx as nx
-from src.annealing import annealing
 from scipy.special import comb
 from scipy.optimize import basinhopping
+from src.annealing import annealing
+from src.observations import estimate_capability
+from src.synergy_graph import SynergyGraph
 
-def create_synergy_graph(O, mathcal_A):
+def create_synergy_graph(O, mathcal_A, weight_fn, k_max):
 	"""
 	O is an observation set
 	mathcal_A is the set of all agents
+	note: agents should start from 0 since the watts strogatz 
+	is labeled that way
 	"""
 	num_agents = len(mathcal_A)
 	nearest_neighbors = 3
 	rewire_prob = 0.30
 	G = nx.generators.random_graphs.connected_watts_strogatz_graph(num_agents, nearest_neighbors, rewire_prob)
-	N = estimate_capability(O, G, mathcal_A)
+	N = estimate_capability(O, G, weight_fn)
 
 	# Create initial synergy graph
 	initial_sgraph = SynergyGraph(G, N)
 
-	value_function = lambda x: log_likelihood(O, x)
+	value_function = lambda x: log_likelihood(O, x, weight_fn)
 	random_neighbor = lambda g: random_graph_neighbor(g)
-	
+
 	final_sgraph, final_value, sgraphs, values = annealing(initial_sgraph, value_function, random_neighbor, debug=True, maxsteps=k_max)
 	return final_sgraph, final_value, sgraphs, values
+
+def log_likelihood(O, S, weight_fn):
+	"""
+	O is an ObservationSet
+	S is a SynergyGraph
+	"""
+	likelihood = 0
+	for observation_group in O.observation_groups:
+		print(f"Params to synergy: ({S}, {observation_group.A}, {weight_fn})")
+
+		synergy_distributions = synergy(S, observation_group.A, weight_fn)
+		for i, observation in enumerate(observation_group.observations):
+			# iterate through an observation of each of the M subtasks 
+			# and evaluate the observation on the corresponding distribution
+			distribution = synergy_distributions[i]
+			likelihood += distribution.logpdf(observation)
+	return likelihood
 
 def random_graph_neighbor(G):
 	"""
@@ -107,8 +128,7 @@ def pairwise_synergy(S, weight_fn, a, b):
 	Pairwise synergy between two agents a and b
 	in a synergy graph S
 	"""
-	path = nx.algorithms.bidirectional_shortest_path(S.graph, a, b)
-	distance = len(path) - 1
+	distance = S.get_distance(a, b)
 	a_distribution = S.get_distributions(a)
 	b_distribution = S.get_distributions(b)
 	sum_distribution = elementwise_add(a_distribution, b_distribution)

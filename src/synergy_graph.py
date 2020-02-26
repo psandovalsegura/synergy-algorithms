@@ -15,3 +15,18 @@ class SynergyGraph:
 		returns list of distributions for a at M subtasks
 		"""
 		return self.normal_distributions[a]
+
+	def get_distance(self, a, b):
+		"""
+		a and b are nodes in the graph G
+		"""
+		return distance_fn(self.graph, a, b)
+
+def distance_fn(G, a, b):
+	"""
+	a and b are nodes in the graph G
+	"""
+	path = nx.algorithms.bidirectional_shortest_path(G, a, b)
+	distance = len(path) - 1
+	return distance
+	
