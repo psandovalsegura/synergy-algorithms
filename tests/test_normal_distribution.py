@@ -31,3 +31,18 @@ def test_evaluate():
 	n = NormalDistribution(0,1)
 	p = 0.95
 	e = n.evaluate(p) == norm.ppf(p)
+
+def test_logpdf_1():
+	n = NormalDistribution(0,1)
+	ll = n.logpdf(0)
+	assert np.round(ll, 3) == -0.919
+
+def test_logpdf_2():
+	n = NormalDistribution(5,1)
+	ll = n.logpdf(5)
+	assert np.round(ll, 3) == -0.919
+
+def test_logpdf_3():
+	n = NormalDistribution(7,3)
+	ll = n.logpdf(7.1)
+	assert np.round(ll, 3) == -1.47

@@ -32,3 +32,4 @@ def test_observation_group_4():
 		og = ObservationGroup(A, M)
 		og.add_observations([[51], [52, 53]])
 	assert "Unable to add observations" in str(excinfo.value)
+	

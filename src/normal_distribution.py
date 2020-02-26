@@ -31,3 +31,9 @@ class NormalDistribution:
 		with higher variance obtain higher values if p > 0.5
 		"""
 		return self.mean + np.sqrt(self.variance) * norm.ppf(p)
+
+	def logpdf(self, x):
+		"""
+		Log likelihood of normal distribution
+		"""
+		return norm.logpdf(x, loc=self.mean, scale=np.sqrt(self.variance))

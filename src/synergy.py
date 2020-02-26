@@ -16,13 +16,16 @@ def create_synergy_graph(O, mathcal_A):
 	nearest_neighbors = 3
 	rewire_prob = 0.30
 	G = nx.generators.random_graphs.connected_watts_strogatz_graph(num_agents, nearest_neighbors, rewire_prob)
-	N = estimate_capability(O, G)
+	N = estimate_capability(O, G, mathcal_A)
 
 	# Create initial synergy graph
-	S_initial = SynergyGraph(G, N)
-	S_learned = S_initial
+	initial_sgraph = SynergyGraph(G, N)
 
-	pass
+	value_function = lambda x: log_likelihood(O, x)
+	random_neighbor = lambda g: random_graph_neighbor(g)
+	
+	final_sgraph, final_value, sgraphs, values = annealing(initial_sgraph, value_function, random_neighbor, debug=True, maxsteps=k_max)
+	return final_sgraph, final_value, sgraphs, values
 
 def random_graph_neighbor(G):
 	"""
