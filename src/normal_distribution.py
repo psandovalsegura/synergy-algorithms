@@ -23,6 +23,9 @@ class NormalDistribution:
 	def __str__(self):
 		return "NormalDistribution({0}, {1})".format(self.mean, self.variance)
 
+	def __repr__(self):
+		return str(self)
+
 	def evaluate(self, p):
 		"""
 		According to Section 3.3, this evaluation balances

@@ -3,13 +3,14 @@ import functools
 import random
 import numpy as np
 import networkx as nx
+import matplotlib.pyplot as plt
 from scipy.special import comb
 from scipy.optimize import basinhopping
 from src.annealing import annealing
 from src.observations import estimate_capability
 from src.synergy_graph import SynergyGraph
 
-def create_synergy_graph(O, mathcal_A, weight_fn, k_max):
+def create_synergy_graph(O, mathcal_A, weight_fn, k_max, display=False):
 	"""
 	O is an observation set
 	mathcal_A is the set of all agents
@@ -32,6 +33,17 @@ def create_synergy_graph(O, mathcal_A, weight_fn, k_max):
 		return SynergyGraph(G_prime, N_prime)
 
 	final_sgraph, final_value, sgraphs, values = annealing(initial_sgraph, value_function, random_neighbor, debug=True, maxsteps=k_max)
+
+	if display:
+		# plot num_graphs and the final graph
+		num_graphs = 4
+		for i, sgraph_index in enumerate(range(0, k_max, int(k_max / 4))):
+			title = f"Iter {sgraph_index} ({values[sgraph_index]:.2f})"
+			sgraphs[sgraph_index].display(1, num_graphs + 1, i+1, title=title)
+		final_title = f"Final ({final_value:.2f})"
+		sgraphs[-1].display(1, num_graphs + 1, num_graphs + 1, title=final_title)
+		plt.show()
+
 	return final_sgraph, final_value, sgraphs, values
 
 def log_likelihood(O, S, weight_fn):

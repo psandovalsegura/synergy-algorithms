@@ -9,7 +9,8 @@ def estimate_capability(O, G, weight_fn):
 	O is an ObservationSet
 	G is a networkx graph
 	"""
-	num_agents = len(G.nodes)
+	agents = list(G.nodes)
+	num_agents = len(agents)
 	num_teams = O.get_num_groups()
 	M_mean = np.zeros((num_teams, num_agents))
 	M_variance = np.zeros((num_teams, num_agents))
@@ -22,17 +23,18 @@ def estimate_capability(O, G, weight_fn):
 
 	for m in range(O.M):
 		for i, observation_group in enumerate(O.observation_groups):
-			for j, a_j in enumerate(observation_group.A):
+			for a_j in observation_group.A:
+				j = agents.index(a_j)
 				M_mean[i][j] = mean_i_j(a_j, observation_group.A, G, weight_fn)
 				M_variance[i][j] = variance_i_j(a_j, observation_group.A, G, weight_fn)
 
-			b_mean[i] = (1 / len(observation_group.A)) * sum(list(map(lambda o: o[m], observation_group.observations)))
-			b_variance[i] = (1 / (len(observation_group.A) - 1)) * sum(list(map(lambda o: (o[m] - b_mean[i]) ** 2, observation_group.observations)))
+			b_mean[i] = (1 / observation_group.size()) * sum(list(map(lambda o: o[m], observation_group.observations)))
+			b_variance[i] = (1 / (observation_group.size() - 1)) * sum(list(map(lambda o: (o[m] - b_mean[i]) ** 2, observation_group.observations)))
 
 		means = np.linalg.lstsq(M_mean, b_mean, rcond=None)[0]
 		variances = np.linalg.lstsq(M_variance, b_variance, rcond=None)[0]
 		for j, a in enumerate(G.nodes):
-			N[a][m] = NormalDistribution(means[j], variances[j])
+			N[a][m] = NormalDistribution(means[j].item(), variances[j].item())
 
 	return N
 

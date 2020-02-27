@@ -26,6 +26,12 @@ class ObservationGroup:
 
 		self.observations += observations
 
+	def size(self):
+		"""
+		return the number of observations in the group
+		"""
+		return len(self.observations)
+
 class ObservationSet:
 	def __init__(self, M, observation_groups):
 		self.observation_groups = observation_groups

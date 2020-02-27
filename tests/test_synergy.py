@@ -236,20 +236,68 @@ def test_random_graph_neighbor_2():
 	assert new_edges != initial_edges
 	assert new_nodes == initial_nodes
 
-def test_create_synergy_graph():
-	M = 1
-	mathcal_A = [0,1,2,3]
-	k_max = 20
+def test_random_graph_neighbor_3():
+	"""
+	check that the synergy graph can be iterated with 
+	random graph neighbor
+	"""
+	S = get_figure_3_synergy_graph()
+	initial_nodes = [n for n in S.graph.nodes]
+	initial_edges = [e for e in S.graph.edges]
 
-	A = [0,1,2]
+	random_graph_neighbor(S.graph)
+
+	new_nodes = [n for n in S.graph.nodes]
+	new_edges = [e for e in S.graph.edges]
+
+	assert len(new_nodes) == len(initial_nodes)
+	assert (len(new_edges) - 1) == len(initial_edges) or (len(new_edges) + 1) == len(initial_edges)
+	assert new_edges != initial_edges
+	assert new_nodes == initial_nodes
+
+def test_log_likelihood_w_new_graph():
+	"""
+	check that the log likelihood of observations changes
+	with a random graph neighbor of a synergy graph
+	"""
+	S = get_figure_3_synergy_graph()
+	M = 1
+	A = [1,2,3]
 	o1 = [[3], [4], [5]]
 	observation_group = ObservationGroup(A, M)
 	observation_group.add_observations(o1)
-	observation_set = ObservationSet(M, [observation_group])
 
-	final_sgraph, final_value, sgraphs, values = create_synergy_graph(observation_set, mathcal_A, weight_fn_reciprocal, k_max)
-	print(f"SynergyGraphs: {sgraphs}")
-	print(f"Values: {values}")
-	print(f"Final SynergyGraph: {final_sgraph} Value: {final_value}")
-	# todo: figure out why values of synergy graphs don't change
-	pass
+	A2 = [3,4]
+	o2 = [[30], [40], [30], [35]]
+	observation_group2 = ObservationGroup(A2, M)
+	observation_group2.add_observations(o2)
+	observation_set = ObservationSet(M, [observation_group, observation_group2])
+	
+	loglike = log_likelihood(observation_set, S, weight_fn_reciprocal)
+	random_graph_neighbor(S.graph)
+	loglike2 = log_likelihood(observation_set, S, weight_fn_reciprocal)
+	assert loglike != loglike2
+
+# def test_create_synergy_graph():
+# 	M = 1
+# 	mathcal_A = [0,1,2,3]
+# 	k_max = 50
+
+# 	A = [0,1,2]
+# 	o1 = [[3], [4], [5]]
+# 	observation_group = ObservationGroup(A, M)
+# 	observation_group.add_observations(o1)
+
+# 	A2 = [0,3]
+# 	o2 = [[30], [40], [30], [35]]
+# 	observation_group2 = ObservationGroup(A2, M)
+# 	observation_group2.add_observations(o2)
+
+# 	observation_set = ObservationSet(M, [observation_group, observation_group2])
+
+# 	final_sgraph, final_value, sgraphs, values = create_synergy_graph(observation_set, mathcal_A, weight_fn_reciprocal, k_max, display=True)
+# 	print(f"SynergyGraphs: {sgraphs}")
+# 	print(f"Values: {values}")
+# 	print(f"Final SynergyGraph: {final_sgraph} Value: {final_value}")
+# 	# todo: figure out why variances are negative
+# 	# assert 0
