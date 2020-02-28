@@ -8,6 +8,12 @@ def estimate_capability(O, G, weight_fn):
 	"""
 	O is an ObservationSet
 	G is a networkx graph
+
+	note: there are two implementation differences from the paper:
+	1. observation groups are allowed to be of size 1 
+	(the paper code would crash with observation groups of size 1 when computing b_variance)
+	2. variance cannot be negative after using with least squares solver
+	(the paper code allows normal distributions with negative variance after least square solver computation)
 	"""
 	agents = list(G.nodes)
 	num_agents = len(agents)
@@ -29,12 +35,15 @@ def estimate_capability(O, G, weight_fn):
 				M_variance[i][j] = variance_i_j(a_j, observation_group.A, G, weight_fn)
 
 			b_mean[i] = (1 / observation_group.size()) * sum(list(map(lambda o: o[m], observation_group.observations)))
-			b_variance[i] = (1 / (observation_group.size() - 1)) * sum(list(map(lambda o: (o[m] - b_mean[i]) ** 2, observation_group.observations)))
+			
+			observation_group_variance_size = observation_group.size()
+			if observation_group_variance_size == 1: observation_group_variance_size = 2
+			b_variance[i] = (1 / (observation_group_variance_size - 1)) * sum(list(map(lambda o: (o[m] - b_mean[i]) ** 2, observation_group.observations)))
 
 		means = np.linalg.lstsq(M_mean, b_mean, rcond=None)[0]
 		variances = np.linalg.lstsq(M_variance, b_variance, rcond=None)[0]
 		for j, a in enumerate(G.nodes):
-			N[a][m] = NormalDistribution(means[j].item(), variances[j].item())
+			N[a][m] = NormalDistribution(means[j].item(), abs(variances[j].item()))
 
 	return N
 

@@ -255,7 +255,7 @@ def test_random_graph_neighbor_3():
 	assert new_edges != initial_edges
 	assert new_nodes == initial_nodes
 
-def test_log_likelihood_w_new_graph():
+def test_log_likelihood_w_graph_neighbor():
 	"""
 	check that the log likelihood of observations changes
 	with a random graph neighbor of a synergy graph
@@ -273,12 +273,35 @@ def test_log_likelihood_w_new_graph():
 	observation_group2.add_observations(o2)
 	observation_set = ObservationSet(M, [observation_group, observation_group2])
 	
-	loglike = log_likelihood(observation_set, S, weight_fn_reciprocal)
+	likelihood = log_likelihood(observation_set, S, weight_fn_reciprocal)
 	random_graph_neighbor(S.graph)
-	loglike2 = log_likelihood(observation_set, S, weight_fn_reciprocal)
-	assert loglike != loglike2
+	likelihood2 = log_likelihood(observation_set, S, weight_fn_reciprocal)
+	assert likelihood != likelihood2
 
-# def test_create_synergy_graph():
+def test_log_likelihood_1():
+	"""
+	consider a large set of agents, but only with observations
+	for a small subset (no asserts, just checking that there are no errors)
+	"""
+	M = 3
+	mathcal_A = [0,1,2,3,4,5]
+
+	A = [0,1,2]
+	o1 = [[3,3,3], [4,4,4], [5,5,5]]
+	observation_group = ObservationGroup(A, M)
+	observation_group.add_observations(o1)
+	observation_set = ObservationSet(M, [observation_group])
+
+	num_agents = len(mathcal_A)
+	nearest_neighbors = 3
+	rewire_prob = 0.3
+	G = nx.generators.random_graphs.connected_watts_strogatz_graph(num_agents, nearest_neighbors, rewire_prob)
+	N = estimate_capability(observation_set, G, weight_fn_reciprocal)
+
+	S = SynergyGraph(G, N)
+	likelihood = log_likelihood(observation_set, S, weight_fn_reciprocal)
+
+# def test_create_synergy_graph_2():
 # 	M = 1
 # 	mathcal_A = [0,1,2,3]
 # 	k_max = 50
