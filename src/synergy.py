@@ -1,6 +1,7 @@
 import itertools
 import functools
 import random
+import copy
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -32,15 +33,18 @@ def create_synergy_graph(O, mathcal_A, weight_fn, k_max, display=False):
 		N_prime = estimate_capability(O, G_prime, weight_fn)
 		return SynergyGraph(G_prime, N_prime)
 
-	final_sgraph, final_value, sgraphs, values = annealing(initial_sgraph, value_function, random_neighbor, debug=True, maxsteps=k_max)
+	final_sgraph, final_value, sgraphs, values = annealing(initial_sgraph, value_function, random_neighbor, debug=False, maxsteps=k_max)
 
 	if display:
 		# plot num_graphs and the final graph
-		num_graphs = 4
-		for i, sgraph_index in enumerate(range(0, k_max, int(k_max / 4))):
-			title = f"Iter {sgraph_index} ({values[sgraph_index]:.2f})"
-			sgraphs[sgraph_index].display(1, num_graphs + 1, i+1, title=title)
-		final_title = f"Final ({final_value:.2f})"
+		num_graphs = 5
+		num_steps = len(sgraphs)
+		step_size = int(num_steps / num_graphs) if (num_steps / num_graphs) >= 1 else 1
+		print(f"Num steps: {num_steps}")
+		for i, sgraph_index in enumerate(range(0, num_steps, step_size)):
+			title = f"Step {sgraph_index} ({values[sgraph_index]:.2f})"
+			sgraphs[sgraph_index].display(1, num_graphs + 1, i + 1, title=title)
+		final_title = f"Final {num_steps} ({final_value:.2f})"
 		sgraphs[-1].display(1, num_graphs + 1, num_graphs + 1, title=final_title)
 		plt.show()
 
@@ -69,33 +73,33 @@ def random_graph_neighbor(G):
 	either adds a new random edge or removes
 	an existing edge, subject to the constraint 
 	that G remains connected
-	note: modifies the input parameter G
 	"""
-	edges = [e for e in G.edges]
-	nodes = [n for n in G]
+	H = copy.deepcopy(G)
+	edges = [e for e in H.edges]
+	nodes = [n for n in H]
 	while True:
 		if random.random() < 0.5:
 			# if there are no edges to remove, do nothing
 			if len(edges) == 0:
 				break
 			removal_edge = random.choice(edges)
-			G.remove_edge(*removal_edge)
+			H.remove_edge(*removal_edge)
 		else:
 			potential_new_edges = set(itertools.combinations(nodes, r=2)) - set(edges)
 			# if there are no new edges to add, do nothing
 			if len(potential_new_edges) == 0:
 				break
 			new_edge = random.choice(list(potential_new_edges))
-			G.add_edge(*new_edge)
+			H.add_edge(*new_edge)
 
 		# if the graph becomes disconnected we
 		# should add back the edge which was removed
-		if nx.is_connected(G):
+		if nx.is_connected(H):
 			break
 		else:
-			G.add_edge(*removal_edge)
+			H.add_edge(*removal_edge)
 
-	return G
+	return H
 
 def get_approx_optimal_team_brute(S, mathcal_A, p, k_max, weight_fn):
 	"""

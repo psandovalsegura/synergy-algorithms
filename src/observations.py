@@ -14,6 +14,7 @@ def estimate_capability(O, G, weight_fn):
 	(the paper code would crash with observation groups of size 1 when computing b_variance)
 	2. variance cannot be negative after using with least squares solver
 	(the paper code allows normal distributions with negative variance after least square solver computation)
+	3. variance cannot be zero
 	"""
 	agents = list(G.nodes)
 	num_agents = len(agents)
@@ -43,7 +44,8 @@ def estimate_capability(O, G, weight_fn):
 		means = np.linalg.lstsq(M_mean, b_mean, rcond=None)[0]
 		variances = np.linalg.lstsq(M_variance, b_variance, rcond=None)[0]
 		for j, a in enumerate(G.nodes):
-			N[a][m] = NormalDistribution(means[j].item(), abs(variances[j].item()))
+			variance = 0.1 if abs(variances[j].item()) == 0 else abs(variances[j].item())
+			N[a][m] = NormalDistribution(means[j].item(), variance)
 
 	return N
 

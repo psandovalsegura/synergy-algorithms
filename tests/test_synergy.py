@@ -180,6 +180,8 @@ def test_get_approx_optimal_team_figure_3():
 	assert found_team_1 or found_team_2 or found_team_3
 	assert len(approx_teams) == len(approx_values)
 	assert len(approx_values) <= k_max
+	assert approx_A == approx_teams[-1]
+	assert approx_value == approx_values[-1]
 
 def test_get_approx_optimal_team_brute_figure_3():
 	S = get_figure_3_synergy_graph()
@@ -206,9 +208,9 @@ def test_random_graph_neighbor_1():
 	initial_nodes = [n for n in G]
 	initial_edges = [e for e in G.edges]
 
-	random_graph_neighbor(G)
-	new_nodes = [n for n in G]
-	new_edges = [e for e in G.edges]
+	H = random_graph_neighbor(G)
+	new_nodes = [n for n in H]
+	new_edges = [e for e in H.edges]
 
 	assert len(new_nodes) == len(initial_nodes)
 	assert (len(new_edges) - 1) == len(initial_edges) or (len(new_edges) + 1) == len(initial_edges)
@@ -245,10 +247,10 @@ def test_random_graph_neighbor_3():
 	initial_nodes = [n for n in S.graph.nodes]
 	initial_edges = [e for e in S.graph.edges]
 
-	random_graph_neighbor(S.graph)
+	G = random_graph_neighbor(S.graph)
 
-	new_nodes = [n for n in S.graph.nodes]
-	new_edges = [e for e in S.graph.edges]
+	new_nodes = [n for n in G.nodes]
+	new_edges = [e for e in G.edges]
 
 	assert len(new_nodes) == len(initial_nodes)
 	assert (len(new_edges) - 1) == len(initial_edges) or (len(new_edges) + 1) == len(initial_edges)
@@ -274,9 +276,10 @@ def test_log_likelihood_w_graph_neighbor():
 	observation_set = ObservationSet(M, [observation_group, observation_group2])
 	
 	likelihood = log_likelihood(observation_set, S, weight_fn_reciprocal)
-	random_graph_neighbor(S.graph)
-	likelihood2 = log_likelihood(observation_set, S, weight_fn_reciprocal)
-	assert likelihood != likelihood2
+	H = random_graph_neighbor(S.graph)
+	S_prime = SynergyGraph(H, S.normal_distributions)
+	likelihood2 = log_likelihood(observation_set, S_prime, weight_fn_reciprocal)
+	assert np.round(likelihood, 3) != np.round(likelihood2, 3)
 
 def test_log_likelihood_1():
 	"""
@@ -301,26 +304,43 @@ def test_log_likelihood_1():
 	S = SynergyGraph(G, N)
 	likelihood = log_likelihood(observation_set, S, weight_fn_reciprocal)
 
-# def test_create_synergy_graph_2():
-# 	M = 1
-# 	mathcal_A = [0,1,2,3]
-# 	k_max = 50
+def test_create_synergy_graph_1():
+	"""
+	create a synergy graph from observations and 
+	check that log of graphs and values are equal in length
+	"""
+	M = 1
+	mathcal_A = [0,1,2,3]
+	k_max = 1000
 
-# 	A = [0,1,2]
-# 	o1 = [[3], [4], [5]]
-# 	observation_group = ObservationGroup(A, M)
-# 	observation_group.add_observations(o1)
+	A = [0,1]
+	o1 = [[500], [500], [500]]
+	observation_group = ObservationGroup(A, M)
+	observation_group.add_observations(o1)
 
-# 	A2 = [0,3]
-# 	o2 = [[30], [40], [30], [35]]
-# 	observation_group2 = ObservationGroup(A2, M)
-# 	observation_group2.add_observations(o2)
+	A2 = [1,2]
+	o2 = [[500], [500], [500], [500], [500]]
+	observation_group2 = ObservationGroup(A2, M)
+	observation_group2.add_observations(o2)
 
-# 	observation_set = ObservationSet(M, [observation_group, observation_group2])
+	A3 = [2,3]
+	o3 = [[500], [500], [500], [500], [500]]
+	observation_group3 = ObservationGroup(A3, M)
+	observation_group3.add_observations(o3)
 
-# 	final_sgraph, final_value, sgraphs, values = create_synergy_graph(observation_set, mathcal_A, weight_fn_reciprocal, k_max, display=True)
-# 	print(f"SynergyGraphs: {sgraphs}")
-# 	print(f"Values: {values}")
-# 	print(f"Final SynergyGraph: {final_sgraph} Value: {final_value}")
-# 	# todo: figure out why variances are negative
-# 	# assert 0
+	A4 = [1,3]
+	o4 = [[10], [10], [10], [10], [10]]
+	observation_group4 = ObservationGroup(A4, M)
+	observation_group4.add_observations(o4)
+
+	A5 = [0,2]
+	o5 = [[10], [10], [10], [10], [10]]
+	observation_group5 = ObservationGroup(A5, M)
+	observation_group5.add_observations(o5)
+
+	observation_set = ObservationSet(M, [observation_group, observation_group2, observation_group3, observation_group4, observation_group5])
+
+	final_sgraph, final_value, sgraphs, values = create_synergy_graph(observation_set, mathcal_A, weight_fn_reciprocal, k_max, display=False)
+	assert len(sgraphs) == len(values)
+	assert len(values) <= k_max
+	assert final_value == values[-1]
