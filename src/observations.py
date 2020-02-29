@@ -43,9 +43,10 @@ def estimate_capability(O, G, weight_fn):
 
 		means = np.linalg.lstsq(M_mean, b_mean, rcond=None)[0]
 		variances = np.linalg.lstsq(M_variance, b_variance, rcond=None)[0]
-		for j, a in enumerate(G.nodes):
-			variance = 0.1 if abs(variances[j].item()) == 0 else abs(variances[j].item())
-			N[a][m] = NormalDistribution(means[j].item(), variance)
+		for a_j in G.nodes:
+			j = agents.index(a_j)
+			variance = 0.1 if variances[j].item() <= 0 else variances[j].item()
+			N[a_j][m] = NormalDistribution(means[j].item(), variance)
 
 	return N
 

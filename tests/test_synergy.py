@@ -441,7 +441,7 @@ def test_log_likelihood_4():
 		likelihood_sample_2_from_distr2 += distr2.logpdf(s)
 	assert likelihood_sample_2_from_distr1 < likelihood_sample_2_from_distr2
 
-# Test case turned off, but it has passed!
+# Test case turned off (due to runtime), but it has passed!
 def off_test_create_synergy_graph_1():
 	"""
 	use the figure 3 synergy graph and create synthetic observations, 
@@ -451,7 +451,7 @@ def off_test_create_synergy_graph_1():
 	M = 1
 	S = get_figure_3_synergy_graph_zero_indexed()
 	agents = list(S.graph.nodes)
-	k_max = 500
+	k_max = 100
 
 	As = [list(i) for i in itertools.combinations(agents, r=2)] + \
 	     [list(i) for i in itertools.combinations(agents, r=3)]
