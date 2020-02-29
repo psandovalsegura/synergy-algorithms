@@ -61,7 +61,6 @@ def log_likelihood(O, S, weight_fn):
 			for m, distribution in enumerate(synergy_distributions):
 				# iterate through an observation of each of the M subtasks 
 				# and evaluate the observation on the corresponding distribution
-				# distribution = synergy_distributions[m]
 				likelihood += distribution.logpdf(observation[m]).item()
 	return likelihood
 

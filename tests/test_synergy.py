@@ -328,7 +328,6 @@ def create_observation_set(S, As, M):
 	os = ObservationSet(M, ogroups)
 	return os
 
-
 def test_log_likelihood_2():
 	"""
 	create some synthetic observations from the synergy graph
@@ -366,8 +365,8 @@ def test_log_likelihood_3():
 	distr1 = NormalDistribution(5, 3)
 	distr2 = NormalDistribution(7, 3)
 
-	sample1 = distr1.sample(100)
-	sample2 = distr2.sample(100)
+	sample1 = distr1.sample(50)
+	sample2 = distr2.sample(50)
 
 	likelihood_sample_1_from_distr1 = 0
 	likelihood_sample_1_from_distr2 = 0
