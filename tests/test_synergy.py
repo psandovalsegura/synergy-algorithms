@@ -7,7 +7,9 @@ from src.normal_distribution import *
 from src.observation_set import *
 
 def get_figure_3_synergy_graph():
-	# Build graph in figure 3 of paper by Liemhetcharat and Veloso
+	"""
+	build the graph in figure 3 of paper by Liemhetcharat and Veloso
+	"""
 	G = nx.Graph()
 	G.add_edge(1,2)
 	G.add_edge(2,4)
@@ -24,6 +26,33 @@ def get_figure_3_synergy_graph():
 	N[4] = [NormalDistribution(20,7)]
 	N[5] = [NormalDistribution(10,3)]
 	N[6] = [NormalDistribution(8,1)]
+
+	# Create graph
+	S = SynergyGraph(G, N)
+	return S
+
+
+def get_figure_3_synergy_graph_zero_indexed():
+	"""
+	build the graph in figure 3 of paper by Liemhetcharat and Veloso
+	with agents indexed from 0
+	"""
+	G = nx.Graph()
+	G.add_edge(0,1)
+	G.add_edge(1,3)
+	G.add_edge(3,0)
+	G.add_edge(3,4)
+	G.add_edge(4,5)
+	G.add_edge(5,2)
+
+	# Create dict of normal distributions for M=1 tasks
+	N = dict()
+	N[0] = [NormalDistribution(5,1)]
+	N[1] = [NormalDistribution(5,2)]
+	N[2] = [NormalDistribution(23,4)]
+	N[3] = [NormalDistribution(20,7)]
+	N[4] = [NormalDistribution(10,3)]
+	N[5] = [NormalDistribution(8,1)]
 
 	# Create graph
 	S = SynergyGraph(G, N)
@@ -281,6 +310,30 @@ def test_log_likelihood_w_graph_neighbor():
 	likelihood2 = log_likelihood(observation_set, S_prime, weight_fn_reciprocal)
 	assert np.round(likelihood, 3) != np.round(likelihood2, 3)
 
+def create_observation_group(S, A, M, group_size):
+	"""
+	helper function to create an observation group
+	"""
+	synergy_A = synergy(S, A, weight_fn_reciprocal)
+	ogroup = ObservationGroup(A, M)
+	observations = []
+	for i in range(group_size):
+		observation = list(map(lambda distr: distr.sample(1).item(), synergy_A))
+		observations.append(observation)
+	ogroup.add_observations(observations)
+	return ogroup
+
+def create_observation_set(S, As, M, group_size):
+	"""
+	helper function to create an observation set from a list of teams
+	"""
+	ogroups = []
+	for A in As:
+		group = create_observation_group(S, A, M, group_size)
+		ogroups.append(group)
+	os = ObservationSet(M, ogroups)
+	return os
+
 def test_log_likelihood_1():
 	"""
 	consider a large set of agents, but only with observations
@@ -304,30 +357,6 @@ def test_log_likelihood_1():
 	S = SynergyGraph(G, N)
 	likelihood = log_likelihood(observation_set, S, weight_fn_reciprocal)
 
-def create_observation_group(S, A, M):
-	"""
-	helper function to create an observation group
-	"""
-	synergy_A = synergy(S, A, weight_fn_reciprocal)
-	ogroup = ObservationGroup(A, M)
-	observations = []
-	for i in range(50):
-		observation = list(map(lambda distr: distr.sample(1).item(), synergy_A))
-		observations.append(observation)
-	ogroup.add_observations(observations)
-	return ogroup
-
-def create_observation_set(S, As, M):
-	"""
-	helper function to create an observation set from a list of teams
-	"""
-	ogroups = []
-	for A in As:
-		group = create_observation_group(S, A, M)
-		ogroups.append(group)
-	os = ObservationSet(M, ogroups)
-	return os
-
 def test_log_likelihood_2():
 	"""
 	create some synthetic observations from the synergy graph
@@ -335,16 +364,17 @@ def test_log_likelihood_2():
 	"""
 	M = 1
 	S = get_figure_3_synergy_graph()
+	observation_group_size = 50
 	
 	As = [[1,2,4], [1,2], [2,5], [2,6], [2,3], [3,6], [4,5,6], [5,6,3], [1,4,5], [1,5,3]]
-	observation_set = create_observation_set(S, As, M)
+	observation_set = create_observation_set(S, As, M, observation_group_size)
 	likelihood = log_likelihood(observation_set, S, weight_fn_reciprocal)
 
 	# Change distributions
 	S_prime = copy.deepcopy(S)
 	S_prime.normal_distributions[3] = [NormalDistribution(3, 1)]
 	S_prime.normal_distributions[4] = [NormalDistribution(17, 5)]
-	observation_set2 = create_observation_set(S_prime, As, M)
+	observation_set2 = create_observation_set(S_prime, As, M, observation_group_size)
 	likelihood2 = log_likelihood(observation_set2, S, weight_fn_reciprocal)
 
 	assert likelihood > likelihood2
@@ -352,7 +382,7 @@ def test_log_likelihood_2():
 	# Change distributions further
 	S_prime.normal_distributions[1] = [NormalDistribution(30, 1)]
 	S_prime.normal_distributions[5] = [NormalDistribution(2, 1)]
-	observation_set3 = create_observation_set(S_prime, As, M)
+	observation_set3 = create_observation_set(S_prime, As, M, observation_group_size)
 	likelihood3 = log_likelihood(observation_set3, S, weight_fn_reciprocal)
 
 	assert likelihood2 > likelihood3
@@ -365,22 +395,23 @@ def test_log_likelihood_3():
 	"""
 	M = 1
 	S = get_figure_3_synergy_graph()
-	
+	observation_group_size = 50
+
 	As = [[2,5], [2,6]]
-	observation_set = create_observation_set(S, As, M)
+	observation_set = create_observation_set(S, As, M, observation_group_size)
 	likelihood = log_likelihood(observation_set, S, weight_fn_reciprocal)
 
 	# Change distributions
 	S_prime = copy.deepcopy(S)
 	S_prime.normal_distributions[6] = [NormalDistribution(3, 1)]
-	observation_set2 = create_observation_set(S_prime, As, M)
+	observation_set2 = create_observation_set(S_prime, As, M, observation_group_size)
 	likelihood2 = log_likelihood(observation_set2, S, weight_fn_reciprocal)
 
 	assert likelihood > likelihood2
 
 	# Change distributions further
 	S_prime.normal_distributions[5] = [NormalDistribution(2, 1)]
-	observation_set3 = create_observation_set(S_prime, As, M)
+	observation_set3 = create_observation_set(S_prime, As, M, observation_group_size)
 	likelihood3 = log_likelihood(observation_set3, S, weight_fn_reciprocal)
 
 	assert likelihood2 > likelihood3
@@ -410,58 +441,24 @@ def test_log_likelihood_4():
 		likelihood_sample_2_from_distr2 += distr2.logpdf(s)
 	assert likelihood_sample_2_from_distr1 < likelihood_sample_2_from_distr2
 
+# Test case turned off, but it has passed!
 def off_test_create_synergy_graph_1():
 	"""
-	create a synergy graph from observations and 
-	check that length of graphs and values are equal in length
+	use the figure 3 synergy graph and create synthetic observations, 
+	then check that we arrive at approximately same graph through annealing
+	and that length of graphs and values are equal in length
 	"""
 	M = 1
-	mathcal_A = [0,1,2,3]
+	S = get_figure_3_synergy_graph_zero_indexed()
+	agents = list(S.graph.nodes)
 	k_max = 500
 
-	A = [0,1]
-	o1 = [[10], [10], [10]]
-	observation_group = ObservationGroup(A, M)
-	observation_group.add_observations(o1)
+	As = [list(i) for i in itertools.combinations(agents, r=2)] + \
+	     [list(i) for i in itertools.combinations(agents, r=3)]
+	observation_group_size = 100
+	observation_set = create_observation_set(S, As, M, observation_group_size)
 
-	A2 = [1,2]
-	o2 = [[10], [10], [10], [10], [10]]
-	observation_group2 = ObservationGroup(A2, M)
-	observation_group2.add_observations(o2)
-
-	A3 = [2,3]
-	o3 = [[10], [10], [10], [10], [10]]
-	observation_group3 = ObservationGroup(A3, M)
-	observation_group3.add_observations(o3)
-
-	A4 = [1,3]
-	o4 = [[-10], [-10], [-10], [-10], [-10]]
-	observation_group4 = ObservationGroup(A4, M)
-	observation_group4.add_observations(o4)
-
-	A5 = [0,2]
-	o5 = [[-10], [-10], [-10], [-10], [-10]]
-	observation_group5 = ObservationGroup(A5, M)
-	observation_group5.add_observations(o5)
-
-	A6 = [0,3]
-	o6 = [[-10], [-10], [-10], [-10], [-10]]
-	observation_group6 = ObservationGroup(A6, M)
-	observation_group6.add_observations(o6)
-
-	observation_set = ObservationSet(M, [observation_group, observation_group2, observation_group3, observation_group4, observation_group5, observation_group6])
-
-	final_sgraph, final_value, sgraphs, values = create_synergy_graph(observation_set, mathcal_A, weight_fn_reciprocal, k_max, display=False)
+	final_sgraph, final_value, sgraphs, values = create_synergy_graph(observation_set, agents, weight_fn_reciprocal, k_max, display=True)
 	assert len(sgraphs) == len(values)
 	assert len(values) <= k_max
 	assert final_value == values[-1]
-
-	# todo: figure out why this isn't the optimal synergy graph
-	# G = nx.Graph()
-	# G.add_edge(0,1)
-	# G.add_edge(1,2)
-	# G.add_edge(2,3)
-
-	# S = SynergyGraph(G, final_sgraph.normal_distributions)
-	# likelihood = log_likelihood(observation_set, S, weight_fn_reciprocal)
-	# assert likelihood > final_value

@@ -16,7 +16,7 @@ def create_synergy_graph(O, mathcal_A, weight_fn, k_max, display=False):
 	O is an observation set
 	mathcal_A is the set of all agents
 	note: agents should start from 0 since the watts strogatz 
-	is labeled that way
+	is labeled in that fashion!
 	"""
 	num_agents = len(mathcal_A)
 	nearest_neighbors = 3
