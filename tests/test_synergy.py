@@ -343,7 +343,7 @@ def test_log_likelihood_2():
 	# Change distributions
 	S_prime = copy.deepcopy(S)
 	S_prime.normal_distributions[3] = [NormalDistribution(3, 1)]
-	S.normal_distributions[4] = [NormalDistribution(17, 5)]
+	S_prime.normal_distributions[4] = [NormalDistribution(17, 5)]
 	observation_set2 = create_observation_set(S_prime, As, M)
 	likelihood2 = log_likelihood(observation_set2, S, weight_fn_reciprocal)
 
@@ -358,6 +358,34 @@ def test_log_likelihood_2():
 	assert likelihood2 > likelihood3
 
 def test_log_likelihood_3():
+	"""
+	create some synthetic observations from the synergy graph
+	and ensure their log likelihood is higher than random handcrafted observations
+	this time with fewer teams
+	"""
+	M = 1
+	S = get_figure_3_synergy_graph()
+	
+	As = [[2,5], [2,6]]
+	observation_set = create_observation_set(S, As, M)
+	likelihood = log_likelihood(observation_set, S, weight_fn_reciprocal)
+
+	# Change distributions
+	S_prime = copy.deepcopy(S)
+	S_prime.normal_distributions[6] = [NormalDistribution(3, 1)]
+	observation_set2 = create_observation_set(S_prime, As, M)
+	likelihood2 = log_likelihood(observation_set2, S, weight_fn_reciprocal)
+
+	assert likelihood > likelihood2
+
+	# Change distributions further
+	S_prime.normal_distributions[5] = [NormalDistribution(2, 1)]
+	observation_set3 = create_observation_set(S_prime, As, M)
+	likelihood3 = log_likelihood(observation_set3, S, weight_fn_reciprocal)
+
+	assert likelihood2 > likelihood3
+
+def test_log_likelihood_4():
 	"""
 	ensure that when sampling from one of two distributions, 
 	we have that the likelihood of the true distribution is greater
