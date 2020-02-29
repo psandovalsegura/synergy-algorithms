@@ -1,5 +1,6 @@
 import pytest
 import itertools
+import copy
 from src.synergy import *
 from src.synergy_graph import *
 from src.normal_distribution import *
@@ -118,7 +119,6 @@ def test_synergy_with_figure_3():
 	team_A_value = team_A_synergy[0].evaluate(p)
 	team_B_value = team_B_synergy[0].evaluate(p)
 	team_C_value = team_C_synergy[0].evaluate(p)
-	print(team_A_value, team_B_value, team_C_value)
 	assert team_A_value > team_B_value
 	assert team_C_value > team_B_value
 	assert team_C_value > team_A_value
@@ -304,43 +304,137 @@ def test_log_likelihood_1():
 	S = SynergyGraph(G, N)
 	likelihood = log_likelihood(observation_set, S, weight_fn_reciprocal)
 
-def test_create_synergy_graph_1():
+def create_observation_group(S, A, M):
+	"""
+	helper function to create an observation group
+	"""
+	synergy_A = synergy(S, A, weight_fn_reciprocal)
+	ogroup = ObservationGroup(A, M)
+	observations = []
+	for i in range(50):
+		observation = list(map(lambda distr: distr.sample(1).item(), synergy_A))
+		observations.append(observation)
+	ogroup.add_observations(observations)
+	return ogroup
+
+def create_observation_set(S, As, M):
+	"""
+	helper function to create an observation set from a list of teams
+	"""
+	ogroups = []
+	for A in As:
+		group = create_observation_group(S, A, M)
+		ogroups.append(group)
+	os = ObservationSet(M, ogroups)
+	return os
+
+
+def test_log_likelihood_2():
+	"""
+	create some synthetic observations from the synergy graph
+	and ensure their log likelihood is higher than random handcrafted observations
+	"""
+	M = 1
+	S = get_figure_3_synergy_graph()
+	
+	As = [[1,2,4], [1,2], [2,5], [2,6], [2,3], [3,6], [4,5,6], [5,6,3], [1,4,5], [1,5,3]]
+	observation_set = create_observation_set(S, As, M)
+	likelihood = log_likelihood(observation_set, S, weight_fn_reciprocal)
+
+	# Change distributions
+	S_prime = copy.deepcopy(S)
+	S_prime.normal_distributions[3] = [NormalDistribution(3, 1)]
+	S.normal_distributions[4] = [NormalDistribution(17, 5)]
+	observation_set2 = create_observation_set(S_prime, As, M)
+	likelihood2 = log_likelihood(observation_set2, S, weight_fn_reciprocal)
+
+	assert likelihood > likelihood2
+
+	# Change distributions further
+	S_prime.normal_distributions[1] = [NormalDistribution(30, 1)]
+	S_prime.normal_distributions[5] = [NormalDistribution(2, 1)]
+	observation_set3 = create_observation_set(S_prime, As, M)
+	likelihood3 = log_likelihood(observation_set3, S, weight_fn_reciprocal)
+
+	assert likelihood2 > likelihood3
+
+def test_log_likelihood_3():
+	"""
+	ensure that when sampling from one of two distributions, 
+	we have that the likelihood of the true distribution is greater
+	"""
+	distr1 = NormalDistribution(5, 3)
+	distr2 = NormalDistribution(7, 3)
+
+	sample1 = distr1.sample(100)
+	sample2 = distr2.sample(100)
+
+	likelihood_sample_1_from_distr1 = 0
+	likelihood_sample_1_from_distr2 = 0
+	for s in sample1:
+		likelihood_sample_1_from_distr1 += distr1.logpdf(s)
+		likelihood_sample_1_from_distr2 += distr2.logpdf(s)
+	assert likelihood_sample_1_from_distr1 > likelihood_sample_1_from_distr2
+
+	likelihood_sample_2_from_distr1 = 0
+	likelihood_sample_2_from_distr2 = 0
+	for s in sample2:
+		likelihood_sample_2_from_distr1 += distr1.logpdf(s)
+		likelihood_sample_2_from_distr2 += distr2.logpdf(s)
+	assert likelihood_sample_2_from_distr1 < likelihood_sample_2_from_distr2
+
+def off_test_create_synergy_graph_1():
 	"""
 	create a synergy graph from observations and 
-	check that log of graphs and values are equal in length
+	check that length of graphs and values are equal in length
 	"""
 	M = 1
 	mathcal_A = [0,1,2,3]
-	k_max = 1000
+	k_max = 500
 
 	A = [0,1]
-	o1 = [[500], [500], [500]]
+	o1 = [[10], [10], [10]]
 	observation_group = ObservationGroup(A, M)
 	observation_group.add_observations(o1)
 
 	A2 = [1,2]
-	o2 = [[500], [500], [500], [500], [500]]
+	o2 = [[10], [10], [10], [10], [10]]
 	observation_group2 = ObservationGroup(A2, M)
 	observation_group2.add_observations(o2)
 
 	A3 = [2,3]
-	o3 = [[500], [500], [500], [500], [500]]
+	o3 = [[10], [10], [10], [10], [10]]
 	observation_group3 = ObservationGroup(A3, M)
 	observation_group3.add_observations(o3)
 
 	A4 = [1,3]
-	o4 = [[10], [10], [10], [10], [10]]
+	o4 = [[-10], [-10], [-10], [-10], [-10]]
 	observation_group4 = ObservationGroup(A4, M)
 	observation_group4.add_observations(o4)
 
 	A5 = [0,2]
-	o5 = [[10], [10], [10], [10], [10]]
+	o5 = [[-10], [-10], [-10], [-10], [-10]]
 	observation_group5 = ObservationGroup(A5, M)
 	observation_group5.add_observations(o5)
 
-	observation_set = ObservationSet(M, [observation_group, observation_group2, observation_group3, observation_group4, observation_group5])
+	A6 = [0,3]
+	o6 = [[-10], [-10], [-10], [-10], [-10]]
+	observation_group6 = ObservationGroup(A6, M)
+	observation_group6.add_observations(o6)
+
+	observation_set = ObservationSet(M, [observation_group, observation_group2, observation_group3, observation_group4, observation_group5, observation_group6])
 
 	final_sgraph, final_value, sgraphs, values = create_synergy_graph(observation_set, mathcal_A, weight_fn_reciprocal, k_max, display=False)
 	assert len(sgraphs) == len(values)
 	assert len(values) <= k_max
 	assert final_value == values[-1]
+
+	# todo: figure out why this isn't the optimal synergy graph
+	# G = nx.Graph()
+	# G.add_edge(0,1)
+	# G.add_edge(1,2)
+	# G.add_edge(2,3)
+
+	# S = SynergyGraph(G, final_sgraph.normal_distributions)
+	# likelihood = log_likelihood(observation_set, S, weight_fn_reciprocal)
+	# assert likelihood > final_value

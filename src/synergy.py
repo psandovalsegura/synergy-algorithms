@@ -40,10 +40,9 @@ def create_synergy_graph(O, mathcal_A, weight_fn, k_max, display=False):
 		num_graphs = 5
 		num_steps = len(sgraphs)
 		step_size = int(num_steps / num_graphs) if (num_steps / num_graphs) >= 1 else 1
-		print(f"Num steps: {num_steps}")
 		for i, sgraph_index in enumerate(range(0, num_steps, step_size)):
 			title = f"Step {sgraph_index} ({values[sgraph_index]:.2f})"
-			sgraphs[sgraph_index].display(1, num_graphs + 1, i + 1, title=title)
+			if i <= num_graphs: sgraphs[sgraph_index].display(1, num_graphs + 1, i + 1, title=title)
 		final_title = f"Final {num_steps} ({final_value:.2f})"
 		sgraphs[-1].display(1, num_graphs + 1, num_graphs + 1, title=final_title)
 		plt.show()
@@ -59,11 +58,11 @@ def log_likelihood(O, S, weight_fn):
 	for observation_group in O.observation_groups:
 		synergy_distributions = synergy(S, observation_group.A, weight_fn)
 		for observation in observation_group.observations:
-			for m, value in enumerate(observation):
+			for m, distribution in enumerate(synergy_distributions):
 				# iterate through an observation of each of the M subtasks 
 				# and evaluate the observation on the corresponding distribution
-				distribution = synergy_distributions[m]
-				likelihood += distribution.logpdf(value).item()
+				# distribution = synergy_distributions[m]
+				likelihood += distribution.logpdf(observation[m]).item()
 	return likelihood
 
 def random_graph_neighbor(G):

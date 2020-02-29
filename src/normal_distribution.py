@@ -35,6 +35,12 @@ class NormalDistribution:
 		"""
 		return self.mean + np.sqrt(self.variance) * norm.ppf(p)
 
+	def sample(self, size):
+		"""
+		Sample size points from the normal distribution
+		"""
+		return np.random.normal(loc=self.mean, scale=np.sqrt(self.variance), size=size)
+
 	def logpdf(self, x):
 		"""
 		Log likelihood of normal distribution

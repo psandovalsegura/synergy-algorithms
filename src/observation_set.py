@@ -5,6 +5,12 @@ class ObservationGroup:
 		self.M = M
 		self.observations = []
 
+	def __str__(self):
+		return "ObservationGroup(A:{0}, observations:{1})".format(self.A, self.observations)
+
+	def __repr__(self):
+		return str(self)
+
 	def add_observation(self, observation):
 		"""
 		observation is a list of the M values
@@ -40,6 +46,12 @@ class ObservationSet:
 		for observation_group in observation_groups:
 			if observation_group.M != M:
 				raise ValueError('Unable to create ObservationSet because one group does not have M subtasks')
+
+	def __str__(self):
+		return "ObservationSet(M:{0}, ObservationGroups:{1})".format(self.M, self.observation_groups)
+
+	def __repr__(self):
+		return str(self)
 
 	def get_num_groups(self):
 		return len(self.observation_groups)
