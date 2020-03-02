@@ -1,6 +1,8 @@
 import pytest
 import itertools
 import copy
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 from src.synergy import *
 from src.synergy_graph import *
 from src.normal_distribution import *
@@ -57,6 +59,21 @@ def get_figure_3_synergy_graph_zero_indexed():
 	# Create graph
 	S = SynergyGraph(G, N)
 	return S
+
+def get_random_synergy_graph(num_agents, M, gamma):
+	"""
+	create a random synergy graph with a given number of agents,
+	a specified number of subtasks and gamma
+	"""
+	nearest_neighbors = 3
+	rewire_prob = 0.3
+	G = nx.generators.random_graphs.connected_watts_strogatz_graph(num_agents, nearest_neighbors, rewire_prob)
+	N = dict()
+	for agent in range(num_agents):
+		# random mean between [-gamma, gamma]
+		# random variance between [0.1, gamma]
+		N[agent] = [NormalDistribution(random.random() * 2 * gamma - gamma, random.random() * gamma + 0.1) for m in range(M)]
+	return SynergyGraph(G, N)
 
 def test_weight_fn_reciprocal():
 	assert weight_fn_reciprocal(1) == 1
@@ -462,3 +479,44 @@ def off_test_create_synergy_graph_1():
 	assert len(sgraphs) == len(values)
 	assert len(values) <= k_max
 	assert final_value == values[-1]
+
+# Test case turned off (due to runtime), but it has passed!
+def off_test_create_synergy_graph_2():
+	"""
+	using a random synergy graph, create synthetic observations, 
+	then check that we arrive at approximately same graph through annealing
+	and plot log likelihood error
+	"""
+	M = 1 
+	num_agents = 10
+	gamma = 10
+	k_max = 200
+	S = get_random_synergy_graph(num_agents, M, gamma)
+	agents = list(S.graph.nodes)
+
+	As = [list(i) for i in itertools.combinations(agents, r=2)] + \
+	     [list(i) for i in itertools.combinations(agents, r=3)]
+	observation_group_size = 100
+	observation_set = create_observation_set(S, As, M, observation_group_size)
+
+	likelihood_o_given_true = log_likelihood(observation_set, S, weight_fn_reciprocal)
+	final_sgraph, final_value, sgraphs, values = create_synergy_graph(observation_set, agents, weight_fn_reciprocal, k_max, display=False)
+	likelihood_errors = list(map(lambda likelihood_o_given_learned: abs(likelihood_o_given_true - likelihood_o_given_learned), values))
+
+	# Plot true graph, initial graph, learned graph, and log likelihood error
+	gs = gridspec.GridSpec(2, 3)
+	fig = plt.figure()
+
+	ax1 = fig.add_subplot(gs[0, 0], title="True Graph") 
+	nx.draw(S.graph, ax=ax1, with_labels=True, font_weight='bold')
+
+	ax2 = fig.add_subplot(gs[0, 1], title="Initial Graph") 
+	initial_graph = sgraphs[0]
+	nx.draw(initial_graph.graph, ax=ax2, with_labels=True, font_weight='bold')
+
+	ax3 = fig.add_subplot(gs[0, 2], title="Learned Graph") 
+	nx.draw(final_sgraph.graph, ax=ax3, with_labels=True, font_weight='bold')
+
+	ax3 = fig.add_subplot(gs[1, :], title="Error of Learned Graph for every Accepted Annealing Step", xlabel="Step", ylabel="Log-Likelihood Error") 
+	ax3.plot(likelihood_errors)
+	plt.show()
