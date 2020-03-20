@@ -1,5 +1,11 @@
 # synergy-algorithms
-A Python implementation of synergy graphs as described in [Modeling and Learning Synergy for Team Formation with Heterogeneous Agents](https://dl.acm.org/doi/10.5555/2343576.2343628) and weighted synergy graphs as described in [Weighted synergy graphs for role assignment in ad hoc heterogeneous robot teams](https://ieeexplore.ieee.org/document/6386027) by Liemhetcharat and Veloso. 
+A Python implementation of [Modeling and Learning Synergy for Team Formation with Heterogeneous Agents (2012)](https://dl.acm.org/doi/10.5555/2343576.2343628) by Liemhetcharat and Veloso, which includes algorithms for:
+- Approximating the optimal team of size n (Algorithm 1)
+- Creating a Synergy Graph from Observations (Algorithm 2)
+- Estimating the Individual Agent Capabilities (Algorithm 3) 
+
+Additionally, the repo contains an implementation of the follow-up work [Weighted synergy graphs for role assignment in ad hoc heterogeneous robot teams (2012)](https://ieeexplore.ieee.org/document/6386027), which includes algorithms for:
+- Learning a Weighted Synergy Graph from Training Examples (Algorithm 1)
 
 Code by Pedro Sandoval Segura
 
