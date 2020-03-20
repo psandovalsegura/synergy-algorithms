@@ -183,12 +183,6 @@ def random_team_neighbor(mathcal_A, A):
 	B[random_index] = new_agent
 	return B
 
-def weight_fn_reciprocal(d):
-	return 1 / d
-
-def weight_fn_exponential(d, h):
-	return np.exp(d * np.log(2) / h)
-
 def value_fn_sum(distributions, p):
 	return sum(list(map(lambda distr: distr.evaluate(p), distributions)))
 

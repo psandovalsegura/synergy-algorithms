@@ -13,6 +13,15 @@ class WeightedSynergyGraph(SynergyGraph):
 		"""
 		super().__init__(G, N)
 
+	def get_capability(self, a, r_a):
+		"""
+		a is a node in self.graph
+		returns list of distributions for a at M subtasks
+
+		Note: roles must be indexed starting at 0
+		"""
+		return self.normal_distributions[a][r_a]
+
 	def get_distance(self, a, b):
 		"""
 		a and b are nodes in the graph G

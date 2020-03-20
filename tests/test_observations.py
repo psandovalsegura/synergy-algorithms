@@ -3,7 +3,7 @@ from src.observation_set import *
 from src.observations import *
 from src.synergy_graph import display
 from src.normal_distribution import NormalDistribution
-from src.synergy import weight_fn_reciprocal
+from src.weight_fns import weight_fn_reciprocal
 
 def test_estimate_capability_1():
 	"""

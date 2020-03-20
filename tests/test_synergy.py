@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from src.synergy import *
 from src.synergy_graph import *
+from src.weight_fns import *
 from src.normal_distribution import *
 from src.observation_set import *
 
