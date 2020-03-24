@@ -88,7 +88,7 @@ def test_random_role_assignment_neighbor():
 
 def test_log_likelihood_by_role():
 	"""
-	check that the log likelihood of the training data is correct 
+	check that the log likelihood of the training data follows the formula in Section 5.B.
 	"""
 	WS = get_figure_2_weighted_synergy_graph()
 
@@ -103,6 +103,19 @@ def test_log_likelihood_by_role():
 
 	assert np.round(log_likelihood_by_role(WS, T, weight_fn_reciprocal), 3) == np.round(expected_log_likelihood, 3)
 
+def test_estimate_means_by_role():
+	WS = get_figure_2_weighted_synergy_graph()
 
+	R = [0, 1]
+	pi = dict()
+	pi[0] = 0
+	pi[1] = 1
+	v = 5
+	T = [(pi, v)]
+
+	means = estimate_means_by_role(WS.graph, R, T)
+	print(means)
+	assert np.round(means[0][0], 3) == 5
+	assert np.round(means[1 * len(R) + 1][0], 3) == 5
 
 

@@ -1,11 +1,12 @@
 import copy
 import random
 import itertools
+import numpy as np
 from scipy.special import comb
 from src.weighted_synergy_graph import WeightedSynergyGraph, random_weighted_graph_neighbor
 from src.normal_distribution import NormalDistribution
 
-def learn_weighted_synergy_graph(num_agents, R, T, display=True):
+def learn_weighted_synergy_graph(num_agents, R, T, weight_fn, display=True):
 	"""
 	num_agents is the number of agents
 	R is a list of roles
@@ -18,12 +19,11 @@ def learn_weighted_synergy_graph(num_agents, R, T, display=True):
 
 	# Create initial synergy graph
 	initial_wsgraph = WeightedSynergyGraph(G, C)
-	initial_pi = create_random_role_assignment(num_agents, R)
 
 	value_function = lambda x: log_likelihood_by_role(x, T, weight_fn)
-	def random_neighbor(s):
-		G_prime = random_weighted_graph_neighbor(s.graph)
-		C_prime = estimate_capability_by_role(G_prime, R, T, weight_fn)
+	def random_neighbor(ws):
+		G_prime = random_weighted_graph_neighbor(ws.graph)
+		C_prime = estimate_capability_by_role(G_prime, R, T)
 		return WeightedSynergyGraph(G_prime, C_prime)
 
 	final_sgraph, final_value, sgraphs, values = annealing(initial_wsgraph, value_function, random_neighbor, debug=False, maxsteps=k_max)
@@ -43,7 +43,47 @@ def learn_weighted_synergy_graph(num_agents, R, T, display=True):
 	return final_sgraph, final_value, sgraphs, values
 
 def estimate_capability_by_role(G, R, T):
+	"""
+	Estimate the means using a least-squares solver
+	and returns a dictionary of capabilities
+
+	G is a networkx graph with self-loops and weighted edges
+	R is a list of roles 
+	T is a list of training examples [(pi, V(pi))]
+	"""
+	means = estimate_means_by_role(G, R, T)
 	pass
+	
+def estimate_means_by_role(G, R, T):
+	"""
+	Estimate the means using a least-squares solver
+	and returns a vector of the means
+
+	G is a networkx graph with self-loops and weighted edges
+	R is a list of roles 
+	T is a list of training examples [(pi, V(pi))]
+	"""
+	agents = list(G.nodes)
+	num_agents = len(agents)
+	num_roles = len(R)
+	num_training_examples = len(T)
+
+	M_mean = np.zeros((num_training_examples, num_agents * num_roles))
+	b_mean = np.zeros((num_training_examples, 1))
+
+	for i, example in enumerate(T):
+		pi, V = example
+		b_mean[i] = V
+		for role in pi.keys():
+			# The i th row in M_mean represents pi_i
+			# The (agent_index * num_roles + j) th col in M_mean represents
+			# the mean for capability of agent agent_index and role j
+			j = R.index(role)
+			agent_index = agents.index(pi[role])
+			M_mean[i][agent_index * num_roles + j] = 0.5
+
+	means = np.linalg.lstsq(M_mean, b_mean, rcond=None)[0]
+	return means
 
 def log_likelihood_by_role(WS, T, weight_fn):
 	"""
