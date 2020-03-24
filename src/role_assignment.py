@@ -56,13 +56,29 @@ def estimate_capability_by_role(G, R, T, weight_fn):
 	num_agents = len(agents)
 	num_roles = len(R)
 
+	# estimate means
 	means = estimate_means_by_role(G, R, T, weight_fn)
-	tolerance = 1e-10
-	variance_0 = np.ones(len(num_agents * num_roles))
-	def F(x):
-		return -0.5 * np.log(2 * np.pi * x) - 0.5 * ((v - expected_synergy.mean)**2 / (x))
 
-	variances = scipy.optimize.broyden1(F, variance_0, f_tol=tolerance)
+	# estimate variances
+	# tolerance = 1e-10
+	# variance_0 = np.ones(len(num_agents * num_roles))
+	# def F(x):
+	# 	return -0.5 * np.log(2 * np.pi * x) - 0.5 * ((v - expected_synergy.mean)**2 / (x))
+
+	# variances = scipy.optimize.broyden1(F, variance_0, f_tol=tolerance)
+
+	static_variance = 1
+
+	# Fill in the capabilities dictionary
+	C = dict()
+	for agent in agents:
+		capability_over_roles = []
+		for role in R:
+			means_index = agent * num_roles + role
+			capability_over_roles.append(NormalDistribution(means[means_index], static_variance))
+		C[agent] = capability_over_roles
+
+	return C
 
 	
 def estimate_means_by_role(G, R, T, weight_fn):
@@ -88,7 +104,7 @@ def estimate_means_by_role(G, R, T, weight_fn):
 		M_mean[i] = get_means_coefficient_row(G, pi, weight_fn)
 
 	means = np.linalg.lstsq(M_mean, b_mean, rcond=None)[0]
-	return means
+	return np.reshape(means, num_agents * num_roles)
 
 def get_means_coefficient_row(G, pi, weight_fn):
 	"""

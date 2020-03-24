@@ -162,7 +162,26 @@ def test_estimate_means_by_role():
 	T = [(pi, v)]
 
 	means = estimate_means_by_role(WS.graph, R, T, weight_fn_reciprocal)
-	assert np.round(means[0][0], 3) == 5
-	assert np.round(means[1 * len(R) + 1][0], 3) == 5
+	assert np.round(means[0], 3) == 5
+	assert np.round(means[1 * len(R) + 1], 3) == 5
 
+def test_estimate_capability_by_role_1():
+	"""
+	check that the capability dictionary is properly instantiated
+
+	Note: variance of distributions is disregarded here
+	"""
+	WS = get_figure_2_weighted_synergy_graph()
+
+	R = [0, 1]
+	pi = dict()
+	pi[0] = 0
+	pi[1] = 1
+	v = 5
+	T = [(pi, v)]
+
+	C = estimate_capability_by_role(WS.graph, R, T, weight_fn_reciprocal)
+	assert len(C.keys()) == len(WS.graph.nodes)
+	assert np.round(C[0][0].mean, 3) == 5 and np.round(C[0][1].mean, 3) == 0
+	assert np.round(C[1][0].mean, 3) == 0 and np.round(C[1][1].mean, 3) == 5
 
