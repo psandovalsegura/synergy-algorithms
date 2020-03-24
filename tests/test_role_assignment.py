@@ -104,6 +104,18 @@ def test_log_likelihood_by_role():
 	assert np.round(log_likelihood_by_role(WS, T, weight_fn_reciprocal), 3) == np.round(expected_log_likelihood, 3)
 
 def test_estimate_means_by_role():
+	"""
+	check that the means for a single training example make sense
+
+	Note: for a 3 agent team with 2 roles the means vector is arranged 
+	in the following way
+	[[mu_agent=0_role=0]
+	[mu_agent=0_role=1]
+	[mu_agent=1_role=0]
+	[mu_agent=1_role=1]
+	[mu_agent=2_role=0]
+	[mu_agent=2_role=1]]
+	"""
 	WS = get_figure_2_weighted_synergy_graph()
 
 	R = [0, 1]

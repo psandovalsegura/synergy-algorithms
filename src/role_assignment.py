@@ -52,7 +52,8 @@ def estimate_capability_by_role(G, R, T):
 	T is a list of training examples [(pi, V(pi))]
 	"""
 	means = estimate_means_by_role(G, R, T)
-	pass
+	
+
 	
 def estimate_means_by_role(G, R, T):
 	"""
