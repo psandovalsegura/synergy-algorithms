@@ -6,7 +6,6 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 from scipy.special import comb
-from scipy.optimize import basinhopping
 from src.annealing import annealing
 from src.observations import estimate_capability
 from src.synergy_graph import SynergyGraph

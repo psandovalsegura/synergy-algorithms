@@ -26,12 +26,18 @@ class WeightedSynergyGraph(SynergyGraph):
 
 	def get_distance(self, a, b):
 		"""
-		a and b are nodes in the graph G
+		a and b are nodes in the weighted graph G
 		"""
-		if a == b:
-			return self.graph[a][a]['weight']
-		else:
-			return nx.algorithms.bellman_ford_path_length(self.graph, a, b)
+		return get_weighted_distance(self.graph, a, b)
+
+def get_weighted_distance(G, a, b):
+	"""
+	a and b are nodes in the weighted graph G
+	"""
+	if a == b:
+		return G[a][a]['weight']
+	else:
+		return nx.algorithms.bellman_ford_path_length(G, a, b)
 
 def random_weighted_graph_neighbor(G):
 	"""
@@ -49,11 +55,11 @@ def random_weighted_graph_neighbor(G):
 	while True:
 		rand = random.random()
 		if rand < 0.25:
-			# Increase weight of random edge by 1
+			# increase weight of random edge by 1
 			increase_edge = random.choice(edges)
 			H[increase_edge[0]][increase_edge[1]]['weight'] += 1
 		elif rand < 0.5:
-			# Decrease weight of random edge by 1
+			# decrease weight of random edge by 1
 			decrease_edge = random.choice(edges)
 			H[decrease_edge[0]][decrease_edge[1]]['weight'] -= 1
 		elif rand < 0.75:

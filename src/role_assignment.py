@@ -2,8 +2,9 @@ import copy
 import random
 import itertools
 import numpy as np
+import scipy.optimize
 from scipy.special import comb
-from src.weighted_synergy_graph import WeightedSynergyGraph, random_weighted_graph_neighbor
+from src.weighted_synergy_graph import WeightedSynergyGraph, get_weighted_distance, random_weighted_graph_neighbor
 from src.normal_distribution import NormalDistribution
 
 def learn_weighted_synergy_graph(num_agents, R, T, weight_fn, display=True):
@@ -15,7 +16,7 @@ def learn_weighted_synergy_graph(num_agents, R, T, weight_fn, display=True):
 	nearest_neighbors = 3
 	rewire_prob = 0.30
 	G = nx.generators.random_graphs.connected_watts_strogatz_graph(num_agents, nearest_neighbors, rewire_prob)
-	C = estimate_capability_by_role(G, R, T)
+	C = estimate_capability_by_role(G, R, T, weight_fn)
 
 	# Create initial synergy graph
 	initial_wsgraph = WeightedSynergyGraph(G, C)
@@ -23,7 +24,7 @@ def learn_weighted_synergy_graph(num_agents, R, T, weight_fn, display=True):
 	value_function = lambda x: log_likelihood_by_role(x, T, weight_fn)
 	def random_neighbor(ws):
 		G_prime = random_weighted_graph_neighbor(ws.graph)
-		C_prime = estimate_capability_by_role(G_prime, R, T)
+		C_prime = estimate_capability_by_role(G_prime, R, T, weight_fn)
 		return WeightedSynergyGraph(G_prime, C_prime)
 
 	final_sgraph, final_value, sgraphs, values = annealing(initial_wsgraph, value_function, random_neighbor, debug=False, maxsteps=k_max)
@@ -42,7 +43,7 @@ def learn_weighted_synergy_graph(num_agents, R, T, weight_fn, display=True):
 
 	return final_sgraph, final_value, sgraphs, values
 
-def estimate_capability_by_role(G, R, T):
+def estimate_capability_by_role(G, R, T, weight_fn):
 	"""
 	Estimate the means using a least-squares solver
 	and returns a dictionary of capabilities
@@ -51,11 +52,20 @@ def estimate_capability_by_role(G, R, T):
 	R is a list of roles 
 	T is a list of training examples [(pi, V(pi))]
 	"""
-	means = estimate_means_by_role(G, R, T)
-	
+	agents = list(G.nodes)
+	num_agents = len(agents)
+	num_roles = len(R)
+
+	means = estimate_means_by_role(G, R, T, weight_fn)
+	tolerance = 1e-10
+	variance_0 = np.ones(len(num_agents * num_roles))
+	def F(x):
+		return -0.5 * np.log(2 * np.pi * x) - 0.5 * ((v - expected_synergy.mean)**2 / (x))
+
+	variances = scipy.optimize.broyden1(F, variance_0, f_tol=tolerance)
 
 	
-def estimate_means_by_role(G, R, T):
+def estimate_means_by_role(G, R, T, weight_fn):
 	"""
 	Estimate the means using a least-squares solver
 	and returns a vector of the means
@@ -75,16 +85,42 @@ def estimate_means_by_role(G, R, T):
 	for i, example in enumerate(T):
 		pi, V = example
 		b_mean[i] = V
-		for role in pi.keys():
-			# The i th row in M_mean represents pi_i
-			# The (agent_index * num_roles + j) th col in M_mean represents
-			# the mean for capability of agent agent_index and role j
-			j = R.index(role)
-			agent_index = agents.index(pi[role])
-			M_mean[i][agent_index * num_roles + j] = 0.5
+		M_mean[i] = get_means_coefficient_row(G, pi, weight_fn)
 
 	means = np.linalg.lstsq(M_mean, b_mean, rcond=None)[0]
 	return means
+
+def get_means_coefficient_row(G, pi, weight_fn):
+	"""
+	Get the row of coefficients which make up the M_mean matrix
+	within estimate_means_by_role
+
+	G is a weighted graph
+	pi is a role policy
+	"""
+	agents = list(G.nodes)
+	roles = list(pi.keys())
+	num_agents = len(agents)
+	num_roles = len(roles)
+	total_pairs = comb(num_roles, 2, exact=True)
+	
+	row = np.zeros(num_agents * num_roles)
+	for pair in itertools.combinations(roles, r=2):
+		r_a, r_b = pair
+		a = pi[r_a]
+		b = pi[r_b]
+		weighted_distance = get_weighted_distance(G, a, b)
+		w = weight_fn(weighted_distance)
+		agent_index_1 = agents.index(a)
+		agent_index_2 = agents.index(b)
+		role_index_1 = roles.index(r_a)
+		role_index_2 = roles.index(r_b)
+
+		row[agent_index_1 * num_roles + role_index_1] += w
+		row[agent_index_2 * num_roles + role_index_2] += w
+
+	scale = (1 / total_pairs)
+	return scale * row
 
 def log_likelihood_by_role(WS, T, weight_fn):
 	"""

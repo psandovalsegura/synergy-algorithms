@@ -100,6 +100,7 @@ def test_random_weighted_graph_neighbor_1():
 	new_nodes = [n for n in H]
 	new_edges = [e for e in H.edges]
 
-	assert new_edges == initial_edges
 	assert new_nodes == initial_nodes
+	assert new_edges == initial_edges
+	
 

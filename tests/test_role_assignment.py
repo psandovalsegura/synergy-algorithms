@@ -103,6 +103,42 @@ def test_log_likelihood_by_role():
 
 	assert np.round(log_likelihood_by_role(WS, T, weight_fn_reciprocal), 3) == np.round(expected_log_likelihood, 3)
 
+def test_get_means_coefficient_row_1():
+	"""
+	check simple example where synergy consists of only a single 
+	pairwise synergy computation
+	"""
+	WS = get_figure_2_weighted_synergy_graph()
+
+	R = [0, 1]
+	pi = dict()
+	pi[0] = 0
+	pi[1] = 1
+
+	row = get_means_coefficient_row(WS.graph, pi, weight_fn_reciprocal)
+
+	assert len(row) == len(R) * len(WS.graph.nodes)
+	assert row[0] == 0.5 and row[3] == 0.5
+	assert row[1] == 0 and row[2] == 0 and row[4] == 0 and row[5] == 0
+
+def test_get_means_coefficient_row_2():
+	"""
+	a more complicated coefficient row with an additional role
+	"""
+	WS = get_figure_2_weighted_synergy_graph()
+
+	R = [0, 1, 2]
+	pi = dict()
+	pi[0] = 0
+	pi[1] = 1
+	pi[2] = 1
+
+	row = get_means_coefficient_row(WS.graph, pi, weight_fn_reciprocal)
+	assert len(row) == len(R) * len(WS.graph.nodes)
+	assert row[0] == (1/3) * (1/2 + 1/2)
+	assert row[4] == (1/3) * (1/2 + 1/4)
+	assert row[5] == (1/3) * (1/2 + 1/4)
+
 def test_estimate_means_by_role():
 	"""
 	check that the means for a single training example make sense
@@ -125,8 +161,7 @@ def test_estimate_means_by_role():
 	v = 5
 	T = [(pi, v)]
 
-	means = estimate_means_by_role(WS.graph, R, T)
-	print(means)
+	means = estimate_means_by_role(WS.graph, R, T, weight_fn_reciprocal)
 	assert np.round(means[0][0], 3) == 5
 	assert np.round(means[1 * len(R) + 1][0], 3) == 5
 
