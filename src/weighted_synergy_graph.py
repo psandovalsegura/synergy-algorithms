@@ -39,7 +39,7 @@ def get_weighted_distance(G, a, b):
 	else:
 		return nx.algorithms.bellman_ford_path_length(G, a, b)
 
-def random_weighted_graph_neighbor(G):
+def random_weighted_graph_neighbor(G, w_min=1, w_max=10):
 	"""
 	G is a networkx graph with self-loops and weighted edges
 
@@ -57,11 +57,13 @@ def random_weighted_graph_neighbor(G):
 		if rand < 0.25:
 			# increase weight of random edge by 1
 			increase_edge = random.choice(edges)
-			H[increase_edge[0]][increase_edge[1]]['weight'] += 1
+			if H[increase_edge[0]][increase_edge[1]]['weight'] < w_max:
+				H[increase_edge[0]][increase_edge[1]]['weight'] += 1
 		elif rand < 0.5:
 			# decrease weight of random edge by 1
 			decrease_edge = random.choice(edges)
-			H[decrease_edge[0]][decrease_edge[1]]['weight'] -= 1
+			if H[decrease_edge[0]][decrease_edge[1]]['weight'] > w_min:
+				H[decrease_edge[0]][decrease_edge[1]]['weight'] -= 1
 		elif rand < 0.75:
 			# if there are no edges to remove, do nothing
 			if len(edges) == 0:
