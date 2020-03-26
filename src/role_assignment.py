@@ -3,19 +3,20 @@ import random
 import itertools
 import numpy as np
 import scipy.optimize
+import networkx as nx
+import matplotlib.pyplot as plt
 from scipy.special import comb
+from src.annealing import annealing
 from src.weighted_synergy_graph import WeightedSynergyGraph, get_weighted_distance, random_weighted_graph_neighbor
 from src.normal_distribution import NormalDistribution
 
-def learn_weighted_synergy_graph(num_agents, R, T, weight_fn, display=True):
+def learn_weighted_synergy_graph(num_agents, R, T, weight_fn, k_max, display=True):
 	"""
 	num_agents is the number of agents
 	R is a list of roles
 	T is a list of training examples [(pi, V(pi))]
 	"""
-	nearest_neighbors = 3
-	rewire_prob = 0.30
-	G = nx.generators.random_graphs.connected_watts_strogatz_graph(num_agents, nearest_neighbors, rewire_prob)
+	G = create_initial_random_weighted_synergy_graph(num_agents)
 	C = estimate_capability_by_role(G, R, T, weight_fn)
 
 	# Create initial synergy graph
@@ -42,6 +43,19 @@ def learn_weighted_synergy_graph(num_agents, R, T, weight_fn, display=True):
 		plt.show()
 
 	return final_sgraph, final_value, sgraphs, values
+
+def create_initial_random_weighted_synergy_graph(num_agents):
+	"""
+	Create the first ranodm weighted graph for simulated annealing
+	"""
+	nearest_neighbors = 3
+	rewire_prob = 0.30
+	w_min = 1
+	w_max = 10
+	G = nx.generators.random_graphs.connected_watts_strogatz_graph(num_agents, nearest_neighbors, rewire_prob)
+	for edge in G.edges:
+		G.edges[edge]['weight'] = random.choice(range(w_min, w_max + 1))
+	return G
 
 def estimate_capability_by_role(G, R, T, weight_fn):
 	"""

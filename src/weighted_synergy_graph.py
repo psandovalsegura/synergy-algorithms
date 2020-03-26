@@ -1,5 +1,6 @@
 import copy
 import random
+import itertools
 import networkx as nx
 from src.synergy_graph import SynergyGraph
 
@@ -14,6 +15,16 @@ class WeightedSynergyGraph(SynergyGraph):
 		the M roles
 		"""
 		super().__init__(G, N)
+
+	def __str__(self):
+		keys = [k for k in self.normal_distributions.keys()]
+		full_str = "\nWSynergyGraph(Graph(nodes:{0}, edges:{1}, weights:{3}),\n              Distributions(keys:{2},".format([n for n in self.graph.nodes], [e for e in self.graph.edges], keys, [self.graph[e[0]][e[1]]['weight'] for e in self.graph.edges])
+		for key in keys:
+			full_str += "\n                                 " + str(self.normal_distributions[key])
+		return full_str + "\n"
+
+	def __repr__(self):
+		return str(self)
 
 	def get_capability(self, a, r_a):
 		"""
@@ -57,18 +68,19 @@ def random_weighted_graph_neighbor(G, w_min=1, w_max=10):
 		if rand < 0.25:
 			# increase weight of random edge by 1
 			increase_edge = random.choice(edges)
-			if H[increase_edge[0]][increase_edge[1]]['weight'] < w_max:
-				H[increase_edge[0]][increase_edge[1]]['weight'] += 1
+			if H.edges[increase_edge]['weight'] < w_max:
+				H.edges[increase_edge]['weight'] += 1
 		elif rand < 0.5:
 			# decrease weight of random edge by 1
 			decrease_edge = random.choice(edges)
-			if H[decrease_edge[0]][decrease_edge[1]]['weight'] > w_min:
-				H[decrease_edge[0]][decrease_edge[1]]['weight'] -= 1
+			if H.edges[decrease_edge]['weight'] > w_min:
+				H.edges[decrease_edge]['weight'] -= 1
 		elif rand < 0.75:
 			# if there are no edges to remove, do nothing
 			if len(edges) == 0:
 				break
 			removal_edge = random.choice(edges)
+			removal_edge_weight = H.edges[removal_edge]['weight']
 			H.remove_edge(*removal_edge)
 		else:
 			potential_new_edges = set(itertools.combinations(nodes, r=2)) - set(edges)
@@ -76,13 +88,13 @@ def random_weighted_graph_neighbor(G, w_min=1, w_max=10):
 			if len(potential_new_edges) == 0:
 				break
 			new_edge = random.choice(list(potential_new_edges))
-			H.add_edge(*new_edge)
+			H.add_edge(*new_edge, weight=random.choice(range(w_min, w_max + 1)))
 
 		# if the graph becomes disconnected we
 		# should add back the edge which was removed
 		if nx.is_connected(H):
 			break
 		else:
-			H.add_edge(*removal_edge)
+			H.add_edge(*removal_edge, weight=removal_edge_weight)
 
 	return H
