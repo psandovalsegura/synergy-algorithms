@@ -2,6 +2,7 @@ import copy
 import random
 import itertools
 import networkx as nx
+import matplotlib.pyplot as plt
 from src.synergy_graph import SynergyGraph
 
 class WeightedSynergyGraph(SynergyGraph):
@@ -18,7 +19,7 @@ class WeightedSynergyGraph(SynergyGraph):
 
 	def __str__(self):
 		keys = [k for k in self.normal_distributions.keys()]
-		full_str = "\nWSynergyGraph(Graph(nodes:{0}, edges:{1}, weights:{3}),\n              Distributions(keys:{2},".format([n for n in self.graph.nodes], [e for e in self.graph.edges], keys, [self.graph[e[0]][e[1]]['weight'] for e in self.graph.edges])
+		full_str = "\nWSynergyGraph(Graph(nodes:{0}, edges:{1}, weights:{3}),\n              Distributions(keys:{2},".format([n for n in self.graph.nodes], [e for e in self.graph.edges], keys, [self.graph.edges[e]['weight'] for e in self.graph.edges])
 		for key in keys:
 			full_str += "\n                                 " + str(self.normal_distributions[key])
 		return full_str + "\n"
@@ -40,6 +41,17 @@ class WeightedSynergyGraph(SynergyGraph):
 		a and b are nodes in the weighted graph G
 		"""
 		return get_weighted_distance(self.graph, a, b)
+
+	def display(self, fig, nrows, ncols, index, title):
+		plt.subplot(nrows, ncols, index, title=title)
+		nx.draw(self.graph, with_labels=True, node_size=200, font_size=8, font_weight='bold')
+
+		# TODO: Create weight edge labels that are properly centered
+		# edge_labels = nx.get_edge_attributes(self.graph, 'weight')
+		# nx.draw_networkx_edge_labels(self.graph, pos=nx.spring_layout(self.graph), edge_labels=edge_labels, label_pos=1)
+
+		print(title)
+		print(WeightedSynergyGraph(self.graph, dict()))
 
 def get_weighted_distance(G, a, b):
 	"""

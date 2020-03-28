@@ -185,7 +185,7 @@ def test_estimate_capability_by_role_1():
 	assert np.round(C[0][0].mean, 3) == 5 and np.round(C[0][1].mean, 3) == 0
 	assert np.round(C[1][0].mean, 3) == 0 and np.round(C[1][1].mean, 3) == 5
 
-def test_learn_weighted_synergy_graph_1():
+def off_test_learn_weighted_synergy_graph_1():
 	"""
 	sanity check that the function doesn't crash
 	"""
@@ -202,17 +202,4 @@ def test_learn_weighted_synergy_graph_1():
 	assert len(sgraphs) == len(values)
 	assert len(values) <= k_max
 	assert final_value == values[-1]
-
-def test_learn_weighted_synergy_graph_2():
-	"""
-	check that we can learn the graph in Figure 2 with synthetic training examples
-	"""
-	pass
-
-
-def test_learn_weighted_synergy_graph_3():
-	"""
-	check that we can learn an arbitrary graph with synthetic training examples
-	"""
-	pass
 
