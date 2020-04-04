@@ -88,19 +88,19 @@ def random_weighted_graph_neighbor(G, w_min=1, w_max=10):
 			if H.edges[decrease_edge]['weight'] > w_min:
 				H.edges[decrease_edge]['weight'] -= 1
 		elif rand < 0.75:
+			# don't remove self-loop edges
+			potential_removal_edges = set(itertools.combinations(nodes, r=2))
+
 			# if there are no edges to remove, do nothing
-			if len(edges) == 0:
+			if len(potential_removal_edges) == 0:
 				break
-			removal_edge = random.choice(edges)
-
-			# don't remove self-loop
-			if removal_edge[0] == removal_edge[1]:
-				break
-
+			removal_edge = random.choice(list(potential_removal_edges))
 			removal_edge_weight = H.edges[removal_edge]['weight']
 			H.remove_edge(*removal_edge)
 		else:
+			# don't add an edge that already exists
 			potential_new_edges = set(itertools.combinations(nodes, r=2)) - set(edges)
+			
 			# if there are no new edges to add, do nothing
 			if len(potential_new_edges) == 0:
 				break
