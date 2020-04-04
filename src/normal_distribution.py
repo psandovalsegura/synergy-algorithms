@@ -21,7 +21,7 @@ class NormalDistribution:
 		return (self.mean == other.mean) and (self.variance == other.variance)
 
 	def __str__(self):
-		return "NormalDistribution({0}, {1})".format(self.mean, self.variance)
+		return f"N(m={np.round(self.mean, 2)}, var={np.round(self.variance, 2)})"
 
 	def __repr__(self):
 		return str(self)

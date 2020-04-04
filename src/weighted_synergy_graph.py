@@ -18,11 +18,12 @@ class WeightedSynergyGraph(SynergyGraph):
 		super().__init__(G, N)
 
 	def __str__(self):
-		keys = [k for k in self.normal_distributions.keys()]
-		full_str = "\nWSynergyGraph(Graph(nodes:{0}, edges:{1}, weights:{3}),\n              Distributions(keys:{2},".format([n for n in self.graph.nodes], [e for e in self.graph.edges], keys, [self.graph.edges[e]['weight'] for e in self.graph.edges])
-		for key in keys:
-			full_str += "\n                                 " + str(self.normal_distributions[key])
-		return full_str + "\n"
+		full_str = "Weights of Edges:\n"
+		full_str += "\n".join([(str(e) + ": " + str(self.graph.edges[e])) for e in self.graph.edges])
+		for k in self.normal_distributions.keys():
+			full_str += f"\nCapabilities of {k}:\n"
+			full_str += "\n".join([str(n) for n in self.normal_distributions[k]])
+		return full_str
 
 	def __repr__(self):
 		return str(self)
@@ -46,12 +47,11 @@ class WeightedSynergyGraph(SynergyGraph):
 		plt.subplot(nrows, ncols, index, title=title)
 		nx.draw(self.graph, with_labels=True, node_size=200, font_size=8, font_weight='bold')
 
-		# TODO: Create weight edge labels that are properly centered
-		# edge_labels = nx.get_edge_attributes(self.graph, 'weight')
-		# nx.draw_networkx_edge_labels(self.graph, pos=nx.spring_layout(self.graph), edge_labels=edge_labels, label_pos=1)
-
-		print(title)
-		print(WeightedSynergyGraph(self.graph, dict()))
+		# Print the edge weights and node capabilities
+		ax = fig.add_subplot(nrows, ncols, (index + ncols), label=(index + ncols))
+		ax.axis('off')
+		txt = ax.text(0, 0, str(self), fontsize=8)
+		txt.set_clip_on(True)
 
 def get_weighted_distance(G, a, b):
 	"""
@@ -92,6 +92,11 @@ def random_weighted_graph_neighbor(G, w_min=1, w_max=10):
 			if len(edges) == 0:
 				break
 			removal_edge = random.choice(edges)
+
+			# don't remove self-loop
+			if removal_edge[0] == removal_edge[1]:
+				break
+
 			removal_edge_weight = H.edges[removal_edge]['weight']
 			H.remove_edge(*removal_edge)
 		else:
