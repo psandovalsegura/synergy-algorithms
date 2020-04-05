@@ -155,6 +155,26 @@ def get_means_coefficient_row(G, pi, weight_fn):
 	scale = (1 / total_pairs)
 	return scale * row
 
+def get_approx_optimal_role_assignment_policy(WS, R, p, weight_fn, k_max):
+	"""
+	Use simulated annealing to find the optimal role policy given
+
+	WS is a WeightedSynergyGraph
+	R is a list of roles
+	p is the risk factor
+	"""
+	agents = list(WS.graph.nodes)
+	num_agents = len(agents)
+	initial_role_policy = create_random_role_assignment(num_agents, R)
+
+	value_function = lambda x: synergy_by_role_policy(WS, x, weight_fn).evaluate(p)
+	def random_neighbor(pi):
+		pi_prime = random_role_assignment_neighbor(pi, num_agents, R)
+		return pi_prime
+
+	final_pi, final_value, pis, values = annealing(initial_role_policy, value_function, random_neighbor, debug=False, maxsteps=k_max)
+	return final_pi, final_value, pis, values
+
 def log_likelihood_by_role(WS, T, weight_fn):
 	"""
 	Compute the log-likelihood of the training data 
