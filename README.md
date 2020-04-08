@@ -20,3 +20,8 @@ All test cases can be run from the root of the repository with
 ```
 python -m pytest -vv tests/
 ```
+
+Experiment tests can be run from the root of the repository with
+```
+python -m pytest -vv tests/ -m slow
+```
