@@ -234,10 +234,10 @@ def test_learn_weighted_synergy_graph_2():
 
 	Note: the team size will be considered the number of roles available
 	"""
-	result_str = ""
-	sensor_radius_list = [15]
-	max_time_list = [2008]
-	set_size_list = [30,59]
+	
+	sensor_radius_list = [15,14]
+	max_time_list = [2008, 1922]
+	set_size_list_of_lists = [[30,59], [30,59]]
 	true_size_list = [30,50]
 
 	team_size = 30
@@ -245,7 +245,8 @@ def test_learn_weighted_synergy_graph_2():
 
 	for sensor_radius_index, sensor_radius in enumerate(sensor_radius_list):
 		max_time = max_time_list[sensor_radius_index]
-
+		set_size_list = set_size_list_of_lists[sensor_radius_index]
+		result_str = ""
 		for set_size_index, set_size in enumerate(set_size_list):
 			ts = true_size_list[set_size_index]
 
@@ -270,7 +271,7 @@ def test_learn_weighted_synergy_graph_2():
 					T.append((pi, v))
 
 			result_str += f"Num training examples (true size): {len(T)}\n"
-			
+
 			# 2 agents: roomba and drone
 			# 5 roles: since the scaled team sizes are of size 5
 			R = list(range(team_size))
@@ -303,6 +304,6 @@ def test_learn_weighted_synergy_graph_2():
 			result_str += f"From data in: {filename}\n\n\n"
 
 
-	with open(f"results_team_size={team_size}_env={environment_width}.txt", "w") as f:
-		f.write(result_str)
+		with open(f"results_team_size={team_size}_env={environment_width}_sensorradius={sensor_radius}.txt", "w") as f:
+			f.write(result_str)
 
