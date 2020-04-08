@@ -1,5 +1,7 @@
+import pickle
 from src.role_assignment import *
 from src.normal_distribution import *
+from src.observation_set import *
 from src.weight_fns import weight_fn_reciprocal
 from tests.test_weighted_synergy_graph import get_figure_2_weighted_synergy_graph
 
@@ -185,9 +187,10 @@ def test_estimate_capability_by_role_1():
 	assert np.round(C[0][0].mean, 3) == 5 and np.round(C[0][1].mean, 3) == 0
 	assert np.round(C[1][0].mean, 3) == 0 and np.round(C[1][1].mean, 3) == 5
 
+# Test case turned off (due to runtime), but it has passed!
 def off_test_learn_weighted_synergy_graph_1():
 	"""
-	sanity check that the function doesn't crash
+	sanity check that the simulated annealing returns appropriate list of graphs and values
 	"""
 	R = [0, 1]
 	pi = dict()
@@ -203,3 +206,84 @@ def off_test_learn_weighted_synergy_graph_1():
 	assert len(values) <= k_max
 	assert final_value == values[-1]
 
+def create_role_policy_for_roomba_drone_team(A, team_size):
+	"""
+	Agents 0 - 4 are roomba
+	Agents 5 - 10 are drone
+	"""
+	pi = dict()
+	for i in range(team_size):
+		# For role i of 5, what agent was chosen?
+		# Agent index 0 is roomba, agent index 1 is drone
+		agent = A[i]
+		agent_index = 0 if agent in range(team_size) else 1
+		pi[i] = agent_index
+	return pi
+
+def get_roomba_ratio(team_size, final_pi):
+	num_drones = sum(final_pi.values())
+	num_roomba = team_size - num_drones
+	return num_roomba / team_size
+
+def test_learn_weighted_synergy_graph_2():
+	"""
+	train a weighted synergy graph on roomba-drone team data 
+	and check what the model thinks is the best role assignment
+
+	Note: the team size will be considered the number of roles available
+	"""
+	team_size = 30
+	environment_width = 50
+	sensor_radius = 15
+	max_time = 2008
+	set_size = 30
+	directory = "/Users/pedrosandoval/Documents/UMDReasearch/synergy-algorithms-data/roomba-drone-teams/"
+	filename = f"{directory}observation_set_team_size={team_size}_env={environment_width}_sensorradius={sensor_radius}_maxtime={max_time}_setsize={set_size}"
+	observation_set = pickle.load(open(filename, "rb"))
+
+	print(f"Num observation groups: {observation_set.get_num_groups()}")
+
+
+	# There was only M=1 subtask when this observation set was collected
+	# but there are 24 observation groups with 10 roomba and drone
+	# Note: since we need |T| > 2 N*M = 2 * 2 * 10
+	T = [] 
+	for m in range(observation_set.M):
+		for i, observation_group in enumerate(observation_set.observation_groups):
+			# print(f"i={i} observation group for A={observation_group.A} obs={observation_group.observations}")
+			pi = create_role_policy_for_roomba_drone_team(observation_group.A, team_size)
+			v = (1 / len(observation_group.observations)) * sum(list(map(lambda o: o[m], observation_group.observations)))
+			T.append((pi, v))
+
+	# 2 agents: roomba and drone
+	# 5 roles: since the scaled team sizes are of size 5
+	R = list(range(team_size))
+	num_agents = 2
+	M = 1
+	k_max = 200
+
+
+	w_min = 1
+	w_max = 10
+	G = nx.generators.classic.path_graph(2)
+	for edge in G.edges:
+		G.edges[edge]['weight'] = random.choice(range(w_min, w_max + 1))
+
+	G.add_edge(0, 0, weight=random.choice(range(w_min, w_max + 1)))
+	G.add_edge(1, 1, weight=random.choice(range(w_min, w_max + 1)))
+
+	final_sgraph, final_value, sgraphs, values = learn_weighted_synergy_graph(num_agents, R, T, weight_fn_reciprocal, k_max, G=G, display=False)	
+	
+	print(f"Final graph:\n{final_sgraph}")
+
+	# Get role assignment policy
+	p = 0.5
+	final_pi, final_value, pis, values = get_approx_optimal_role_assignment_policy(final_sgraph, R, p, weight_fn_reciprocal, k_max)
+	print(f"pis:{pis}")
+	print(f"values:{values}")
+	print(f"final_pi:{final_pi}")
+	print(f"final value:{final_value}")
+	print(f"roomba ratio:{get_roomba_ratio(team_size, final_pi)}")
+	print(f"From data in: {filename}")
+
+	assert 0
