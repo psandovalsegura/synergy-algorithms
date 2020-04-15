@@ -242,6 +242,7 @@ def test_learn_weighted_synergy_graph_2():
 
 	team_size = 30
 	environment_width = 50
+	runs_to_average = 10
 
 	for sensor_radius_index, sensor_radius in enumerate(sensor_radius_list):
 		max_time = max_time_list[sensor_radius_index]
@@ -271,39 +272,42 @@ def test_learn_weighted_synergy_graph_2():
 					T.append((pi, v))
 
 			result_str += f"Num training examples (true size): {len(T)}\n"
+			roomba_ratios = []
 
-			# 2 agents: roomba and drone
-			# 5 roles: since the scaled team sizes are of size 5
-			R = list(range(team_size))
-			num_agents = 2
-			M = 1
-			k_max = 200
+			for rta in range(runs_to_average):
+				# 2 agents: roomba and drone
+				# 5 roles: since the scaled team sizes are of size 5
+				R = list(range(team_size))
+				num_agents = 2
+				M = 1
+				k_max = 200
 
 
-			w_min = 1
-			w_max = 10
-			G = nx.generators.classic.path_graph(2)
-			for edge in G.edges:
-				G.edges[edge]['weight'] = random.choice(range(w_min, w_max + 1))
+				w_min = 1
+				w_max = 10
+				G = nx.generators.classic.path_graph(2)
+				for edge in G.edges:
+					G.edges[edge]['weight'] = random.choice(range(w_min, w_max + 1))
 
-			G.add_edge(0, 0, weight=random.choice(range(w_min, w_max + 1)))
-			G.add_edge(1, 1, weight=random.choice(range(w_min, w_max + 1)))
+				G.add_edge(0, 0, weight=random.choice(range(w_min, w_max + 1)))
+				G.add_edge(1, 1, weight=random.choice(range(w_min, w_max + 1)))
 
-			final_sgraph, final_value, sgraphs, values = learn_weighted_synergy_graph(num_agents, R, T, weight_fn_reciprocal, k_max, G=G, display=False)	
-			
+				final_sgraph, final_value, sgraphs, values = learn_weighted_synergy_graph(num_agents, R, T, weight_fn_reciprocal, k_max, G=G, display=False)	
+
+				# Get role assignment policy
+				p = 0.5
+				final_pi, final_value, pis, values = get_approx_optimal_role_assignment_policy(final_sgraph, R, p, weight_fn_reciprocal, k_max)
+				roomba_ratios.append(get_roomba_ratio(team_size, final_pi))
+
 			result_str += f"Final graph:\n{final_sgraph}\n"
-
-			# Get role assignment policy
-			p = 0.5
-			final_pi, final_value, pis, values = get_approx_optimal_role_assignment_policy(final_sgraph, R, p, weight_fn_reciprocal, k_max)
 			result_str += f"pis:{pis}\n"
 			result_str += f"values:{values}\n"
 			result_str += f"final_pi:{final_pi}\n"
 			result_str += f"final value:{final_value}\n"
-			result_str += f"roomba ratio:{get_roomba_ratio(team_size, final_pi)}\n"
+			result_str += f"avg roomba ratio (out of {runs_to_average} runs):{sum(roomba_ratios) / runs_to_average}\n"
 			result_str += f"From data in: {filename}\n\n\n"
 
 
-		with open(f"results_team_size={team_size}_env={environment_width}_sensorradius={sensor_radius}.txt", "w") as f:
+		with open(f"avg_results_team_size={team_size}_env={environment_width}_sensorradius={sensor_radius}.txt", "w") as f:
 			f.write(result_str)
 
