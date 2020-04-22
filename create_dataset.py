@@ -60,6 +60,7 @@ def create_observation_from_data(oteam_size, sensor_radius, num_completion_times
 			A_roomba = random.sample(roomba_agents, k=num_roomba)
 			A_drone = random.sample(drone_agents, k=num_drone)
 			A = A_roomba + A_drone
+			random.shuffle(A)
 
 			# Ensure we don't put in a team that's been seen before
 			if set(A) in [set(x) for x in teams_considered]:
@@ -76,12 +77,12 @@ def create_observation_from_data(oteam_size, sensor_radius, num_completion_times
 			ogroups.append(ogroup)
 
 	os = ObservationSet(M, ogroups)	
-	output_filename = f"../synergy-algorithms-data/roomba-drone-teams/observation_set_team_size={oteam_size}_env={environment_width}_sensorradius={sensor_radius}_maxtime={max_completion_time}_setsize={os.get_num_groups()}"
+	output_filename = f"../synergy-algorithms-data/roomba-drone-teams/new_observation_set_team_size={oteam_size}_env={environment_width}_sensorradius={sensor_radius}_maxtime={max_completion_time}_setsize={os.get_num_groups()}"
 	pickle.dump(os, open(output_filename, "wb"))
 
 def main():
 	num_completion_times_list = [1,2,4,6,8,10,40,70,100]
-	sensor_radius_list = [9,10,11,12,13]
+	sensor_radius_list = [9,10,11,12,13,14,15]
 	for sr in sensor_radius_list:
 		for nc in num_completion_times_list:
 			create_observation_from_data(oteam_size=30, sensor_radius=sr, num_completion_times=nc)
