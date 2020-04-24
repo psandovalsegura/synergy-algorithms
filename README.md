@@ -15,6 +15,13 @@ All required modules can be installed with
 pip install -r requirements.txt
 ```
 
+But it is recommended you first create a virtual environment, then install modules with
+```
+python3 -m venv synergy-algorithms-venv;
+source synergy-algorithms-venv/bin/activate;
+pip install -r requirements.txt
+```
+
 ### Tests
 All test cases can be run from the root of the repository with
 ```
